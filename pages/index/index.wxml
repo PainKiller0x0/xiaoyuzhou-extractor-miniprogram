@@ -17,11 +17,13 @@
         class="url-input"
         placeholder="请在此处粘贴小宇宙播客单集链接..."
         model:value="{{inputValue}}"
+        bindinput="onInput"
         auto-height
         maxlength="-1"
         placeholder-class="input-placeholder"
       ></textarea>
-    </view>
+      <button class="paste-link-button {{showPasteButton ? 'paste-link-button--visible' : 'paste-link-button--hidden'}}" 
+              bind:tap="onPasteLinkTap"></button> </view>
     <view class="status-message-box" wx:if="{{statusMessage}}">
       <text class="status-message-icon">⚠️</text>
       <text class="status-message-text">{{statusMessage}}</text>
@@ -35,7 +37,8 @@
         <text class="result-title">音频直链已生成</text>
       </view>
       <text class="podcast-title">{{podcastTitle}}</text>
-      <text class="result-url clickable-url" user-select bind:tap="onCopyLinkOnly">{{resultUrl}}</text> <text class="copy-hint-text">点击链接即可复制</text>
+      <text class="result-url clickable-url" user-select bind:tap="onCopyLinkOnly">{{resultUrl}}</text>
+      <text class="copy-hint-text">点击链接即可复制</text>
     </view>
   </block>
   

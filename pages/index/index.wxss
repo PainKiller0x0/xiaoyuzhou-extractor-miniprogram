@@ -2,70 +2,326 @@
 
 /* 整体页面容器样式 */
 .container {
-  padding: 60rpx 40rpx 0; /* 底部padding移到bottom-actions-fixed */
+  padding: 60rpx 40rpx 0;
   display: flex;
-  flex-direction: column; /* 垂直布局 */
+  flex-direction: column;
   align-items: center;
   box-sizing: border-box;
-  background: linear-gradient(to bottom, #f0f2f5, #e0e4eb); /* 这个背景属于页面特定设计，保留在这里 */
+  background: linear-gradient(to bottom, #f0f2f5, #e0e4eb);
   min-height: 100vh;
-  /* 字体使用了 CSS 变量，它会自动从 app.wxss 中继承 */
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 /* 头部区域样式 */
-.header { display: flex; flex-direction: column; align-items: center; margin-bottom: 80rpx; }
-.logo { width: 180rpx; height: 180rpx; margin-bottom: 30rpx; border-radius: 36rpx; box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1); border: 4rpx solid rgba(255, 255, 255, 0.6); }
-.title-wrapper { display: flex; flex-direction: column; align-items: center; }
-.main-title { font-size: 56rpx; font-weight: 700; color: #2c3e50; margin-bottom: 10rpx; text-shadow: 1rpx 1rpx 2rpx rgba(0,0,0,0.05); }
-.sub-title { font-size: 36rpx; font-weight: 500; color: #55606e; margin-bottom: 20rpx; }
-.description-text { font-size: 28rpx; color: #7f8c8d; text-align: center; line-height: 1.4; padding: 0 20rpx; }
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 80rpx;
+}
+.logo {
+  width: 180rpx;
+  height: 180rpx;
+  margin-bottom: 30rpx;
+  border-radius: 36rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+  border: 4rpx solid rgba(255, 255, 255, 0.6);
+}
+.title-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.main-title {
+  font-size: 56rpx;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 10rpx;
+  text-shadow: 1rpx 1rpx 2rpx rgba(0,0,0,0.05);
+}
+.sub-title {
+  font-size: 36rpx;
+  font-weight: 500;
+  color: #55606e;
+  margin-bottom: 20rpx;
+}
+.description-text {
+  font-size: 28rpx;
+  color: #7f8c8d;
+  text-align: center;
+  line-height: 1.4;
+  padding: 0 20rpx;
+}
 
-/* 核心可变内容区域 */
-.content-area { width: 100%; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 40rpx; box-sizing: border-box; }
+/* === 核心可变内容区域：输入框 或 结果链接 === */
+.content-area {
+  width: 100%;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 40rpx;
+  box-sizing: border-box;
+}
 
-/* 基础卡片样式 */
-.content-card-base { width: 100%; background-color: var(--url-bg-color); border-radius: 20rpx; box-shadow: 0 8rpx 20rpx var(--shadow-color); border: 1rpx solid rgba(255, 255, 255, 0.8); box-sizing: border-box; animation: fadeIn 0.5s ease-out forwards; }
+/* 基础卡片样式，用于输入框和结果链接 */
+.content-card-base {
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 20rpx;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.08);
+  border: 1rpx solid rgba(255, 255, 255, 0.8);
+  box-sizing: border-box;
+  animation: fadeIn 0.5s ease-out forwards; /* 整个卡片出现时的动画 */
+  position: relative; /* 确保粘贴按钮可以相对定位 */
+}
 
 /* 输入框部分的卡片化 */
-.input-section-card { padding: 30rpx; min-height: 240rpx; display: flex; align-items: center; justify-content: center; }
-.url-input { width: 100%; height: auto; font-size: 32rpx; line-height: 1.6; color: var(--title-color); box-sizing: border-box; }
-.input-placeholder { color: #b0bec5; }
+.input-section-card {
+  padding: 30rpx;
+  min-height: 240rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 70rpx; /* 留出粘贴按钮的空间，不让它覆盖文字 */
+}
+.url-input {
+  width: 100%;
+  height: auto;
+  font-size: 32rpx;
+  line-height: 1.6;
+  color: #34495e;
+  box-sizing: border-box;
+  flex-grow: 1;
+}
+.input-placeholder {
+  color: #b0bec5;
+}
+
+/* === 修正：粘贴链接按钮样式 (完整动画控制) === */
+.paste-link-button {
+  position: absolute;
+  right: 25rpx;
+  bottom: 25rpx;
+  background-color: rgba(0, 0, 0, 0.08);
+  color: #55606e;
+  font-size: 26rpx;
+  padding: 16rpx 32rpx;
+  border-radius: 12rpx;
+  line-height: 1;
+  height: auto;
+  width: auto !important; 
+  min-width: 0 !important;
+  border: none;
+  box-shadow: none;
+  box-sizing: border-box;
+  text-align: center; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* 核心：添加过渡效果，应用于 opacity 和 transform */
+  /* transition 用于所有过渡，animation用于首次出现和强制消失 */
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+
+  /* 默认隐藏状态，通过JS的setTimeout和class控制动画 */
+  opacity: 0;
+  transform: translateY(10rpx); /* 默认起始位置，隐藏状态 */
+  pointer-events: none; /* 默认不可点击 */
+}
+
+/* 新增：可见状态的类，用于触发渐显动画 */
+.paste-link-button.paste-link-button--visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto; /* 可点击 */
+}
+/* 消失状态的类，直接覆盖默认的visible状态，但animation优先级更高 */
+.paste-link-button.paste-link-button--hidden {
+  opacity: 0;
+  transform: translateY(10rpx);
+  pointer-events: none; /* 不可点击 */
+}
+
+/* 新增：按钮的文本通过伪元素显示 */
+.paste-link-button::before {
+    content: "粘贴链接"; /* 在这里定义按钮文本 */
+}
+
+
+.paste-link-button::after {
+  border: none;
+}
+.paste-link-button:active {
+  background-color: rgba(0, 0, 0, 0.15);
+  transform: scale(0.96);
+}
+/* === 修正结束 === */
+
 
 /* 结果显示区域的卡片化 */
-.result-section-card { padding: 40rpx; min-height: 240rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.result-header { display: flex; align-items: center; margin-bottom: 15rpx; }
-.result-icon { font-size: 48rpx; margin-right: 15rpx; color: var(--copy-btn-bg); }
-.result-title { font-size: 38rpx; font-weight: 600; color: var(--title-color); }
-.podcast-title { font-size: 32rpx; font-weight: 500; color: var(--title-color); text-align: center; word-break: break-all; line-height: 1.5; margin-bottom: 25rpx; padding: 0 10rpx; }
-.result-url { font-size: 30rpx; color: var(--copy-btn-hover-bg); word-break: break-all; line-height: 1.6; text-align: center; padding: 15rpx 0; width: 100%; }
-.clickable-url:active { background-color: var(--hover-bg-color); border-radius: 8rpx; }
-.copy-hint-text { font-size: 26rpx; color: var(--secondary-text-color); margin-top: 10rpx; text-align: center; width: 100%; }
+.result-section-card {
+  padding: 40rpx;
+  min-height: 240rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.result-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15rpx;
+}
+.result-icon {
+  font-size: 48rpx;
+  margin-right: 15rpx;
+  color: var(--copy-btn-bg);
+}
+.result-title {
+  font-size: 38rpx;
+  font-weight: 600;
+  color: var(--title-color);
+}
+.podcast-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: var(--title-color);
+  text-align: center;
+  word-break: break-all;
+  line-height: 1.5;
+  margin-bottom: 25rpx;
+  padding: 0 10rpx;
+}
+.result-url {
+  font-size: 30rpx;
+  color: var(--copy-btn-hover-bg);
+  word-break: break-all;
+  line-height: 1.6;
+  text-align: center;
+  padding: 15rpx 0;
+  width: 100%;
+}
+.clickable-url:active {
+  background-color: var(--hover-bg-color);
+  border-radius: 8rpx;
+}
+.copy-hint-text {
+  font-size: 26rpx;
+  color: var(--secondary-text-color);
+  margin-top: 10rpx;
+  text-align: center;
+  width: 100%;
+}
 
 /* 底部操作区域 */
-.bottom-actions-fixed { width: 100%; padding: 20rpx 40rpx; box-sizing: border-box; position: fixed; bottom: 0; left: 0; z-index: 100; background: linear-gradient(to top, #f0f2f5 70%, rgba(240, 242, 245, 0)); display: flex; flex-direction: column; align-items: center; }
+.bottom-actions-fixed {
+  width: 100%;
+  padding: 20rpx 40rpx;
+  box-sizing: border-box;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+  background: linear-gradient(to top, #f0f2f5 70%, rgba(240, 242, 245, 0));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
 /* 主操作按钮 */
-.action-button { width: 100%; height: 108rpx; color: var(--btn-text-color); font-size: 36rpx; font-weight: 600; border-radius: 54rpx; display: flex; align-items: center; justify-content: center; box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.15); transition: all 0.2s ease-in-out; letter-spacing: 1rpx; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.action-button[disabled] { background: linear-gradient(to right, #a5d6a7, #81c784) !important; opacity: 0.8; }
-.extract-button { background: linear-gradient(to right, var(--download-btn-bg), var(--download-btn-hover-bg)); }
-.extract-button:active { transform: translateY(2rpx) scale(0.98); box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.1); }
-.copy-button { background: linear-gradient(to right, var(--copy-btn-bg), var(--copy-btn-hover-bg)); }
-.copy-button:active { transform: translateY(2rpx) scale(0.98); box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.1); }
+.action-button {
+  width: 100%;
+  height: 108rpx;
+  color: var(--btn-text-color);
+  font-size: 36rpx;
+  font-weight: 600;
+  border-radius: 54rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease-in-out;
+  letter-spacing: 1rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.action-button[disabled] {
+  background: linear-gradient(to right, #a5d6a7, #81c784) !important;
+  opacity: 0.8;
+}
+.extract-button {
+  background: linear-gradient(to right, var(--download-btn-bg), var(--download-btn-hover-bg));
+}
+.extract-button:active {
+  transform: translateY(2rpx) scale(0.98);
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.1);
+}
+.copy-button {
+  background: linear-gradient(to right, var(--copy-btn-bg), var(--copy-btn-hover-bg));
+}
+.copy-button:active {
+  transform: translateY(2rpx) scale(0.98);
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.1);
+}
 
 /* 次要按钮样式 */
-.secondary-action-area { margin-top: 30rpx; width: 100%; text-align: center; }
-.secondary-button { background-color: transparent; color: var(--secondary-text-color); font-size: 30rpx; font-weight: 500; padding: 10rpx 25rpx; border: 1rpx solid #bdc3c7; border-radius: 40rpx; line-height: 1; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s ease-in-out; }
-.secondary-button::after { border: none; }
-.secondary-button:active { background-color: rgba(127, 140, 141, 0.1); transform: scale(0.98); }
+.secondary-action-area {
+  margin-top: 30rpx;
+  width: 100%;
+  text-align: center;
+}
+.secondary-button {
+  background-color: transparent;
+  color: var(--secondary-text-color);
+  font-size: 30rpx;
+  font-weight: 500;
+  padding: 10rpx 25rpx;
+  border: 1rpx solid #bdc3c7;
+  border-radius: 40rpx;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+}
+.secondary-button::after {
+  border: none;
+}
+.secondary-button:active {
+  background-color: rgba(127, 140, 141, 0.1);
+  transform: scale(0.98);
+}
 
 /* 状态/错误提示信息样式 */
-.status-message-box { margin-top: 40rpx; padding: 20rpx 30rpx; background-color: #fcebeb; border: 1rpx solid #ea6a6a; border-radius: 16rpx; display: flex; align-items: center; width: 100%; box-sizing: border-box; animation: fadeIn 0.4s ease-out forwards; }
-.status-message-icon { font-size: 36rpx; margin-right: 15rpx; color: #ea6a6a; }
-.status-message-text { font-size: 28rpx; color: #c0392b; line-height: 1.4; }
+.status-message-box {
+  margin-top: 40rpx;
+  padding: 20rpx 30rpx;
+  background-color: #fcebeb;
+  border: 1rpx solid #ea6a6a;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  animation: fadeIn 0.4s ease-out forwards;
+}
+.status-message-icon {
+  font-size: 36rpx;
+  margin-right: 15rpx;
+  color: #ea6a6a;
+}
+.status-message-text {
+  font-size: 28rpx;
+  color: #c0392b;
+  line-height: 1.4;
+}
 
 /* 动画效果 */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(15rpx); }
-  to   { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: translateY(0); }
 }

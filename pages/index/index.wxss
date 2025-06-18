@@ -100,7 +100,7 @@
   color: #b0bec5;
 }
 
-/* === 修正：粘贴链接按钮样式 (完整动画控制) === */
+/* 粘贴链接按钮样式 (完整动画控制) */
 .paste-link-button {
   position: absolute;
   right: 25rpx;
@@ -122,34 +122,26 @@
   align-items: center;
   justify-content: center;
 
-  /* 核心：添加过渡效果，应用于 opacity 和 transform */
-  /* transition 用于所有过渡，animation用于首次出现和强制消失 */
   transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-
-  /* 默认隐藏状态，通过JS的setTimeout和class控制动画 */
   opacity: 0;
   transform: translateY(10rpx); /* 默认起始位置，隐藏状态 */
   pointer-events: none; /* 默认不可点击 */
 }
 
-/* 新增：可见状态的类，用于触发渐显动画 */
 .paste-link-button.paste-link-button--visible {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto; /* 可点击 */
 }
-/* 消失状态的类，直接覆盖默认的visible状态，但animation优先级更高 */
 .paste-link-button.paste-link-button--hidden {
   opacity: 0;
   transform: translateY(10rpx);
   pointer-events: none; /* 不可点击 */
 }
 
-/* 新增：按钮的文本通过伪元素显示 */
 .paste-link-button::before {
-    content: "粘贴链接"; /* 在这里定义按钮文本 */
+    content: "粘贴链接"; 
 }
-
 
 .paste-link-button::after {
   border: none;
@@ -158,7 +150,6 @@
   background-color: rgba(0, 0, 0, 0.15);
   transform: scale(0.96);
 }
-/* === 修正结束 === */
 
 
 /* 结果显示区域的卡片化 */
@@ -180,21 +171,40 @@
   margin-right: 15rpx;
   color: var(--copy-btn-bg);
 }
+/* === 修正：确保 .result-title 可见性 === */
 .result-title {
   font-size: 38rpx;
   font-weight: 600;
-  color: var(--title-color);
+  color: #2c3e50 !important; /* 强制确保颜色清晰可见，使用深色 */
+  /* 以下强制规则，防止被意外隐藏 */
+  opacity: 1 !important;
+  display: block !important;
+  visibility: visible !important;
+  height: auto !important;
+  overflow: visible !important;
+  z-index: auto !important;
+  position: static !important;
 }
+/* === 修正结束 === */
+
 .podcast-title {
   font-size: 32rpx;
   font-weight: 500;
-  color: var(--title-color);
+  color: #2c3e50 !important; /* 强制确保颜色清晰可见，使用深色 */
   text-align: center;
   word-break: break-all;
   line-height: 1.5;
   margin-bottom: 25rpx;
   padding: 0 10rpx;
+  opacity: 1 !important; /* 强制不透明 */
+  display: block !important; /* 强制显示为块级元素 */
+  visibility: visible !important; /* 强制可见 */
+  height: auto !important; /* 强制高度自适应 */
+  overflow: visible !important; /* 强制不裁剪内容 */
+  z-index: auto !important; /* 确保层级正常 */
+  position: static !important; /* 确保不是绝对定位 */
 }
+
 .result-url {
   font-size: 30rpx;
   color: var(--copy-btn-hover-bg);

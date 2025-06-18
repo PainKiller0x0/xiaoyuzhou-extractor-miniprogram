@@ -113,29 +113,39 @@ Page({
    * “提取音频”按钮的点击事件处理函数
    */
   onExtractTap() {
+    console.log('前端：即将调用云函数 extractM4a'); 
+
     if (!this.data.inputValue.trim()) {
-      wx.showToast({
-        title: '链接不能为空',
-        icon: 'none'
-      });
+      wx.showToast({ title: '链接不能为空', icon: 'none' });
+      console.log('前端：输入框为空，调用取消');
       return;
     }
 
-    this.setData({
-      isLoading: true,
-      resultUrl: '',
-      podcastTitle: '',
-      statusMessage: '',
-      showPasteButton: false, // 开始提取时，隐藏粘贴按钮
-    });
+    this.setData({ isLoading: true, resultUrl: '', podcastTitle: '', statusMessage: '', showPasteButton: false });
 
     wx.cloud.callFunction({
       name: 'extractM4a',
-      data: {
-        episodeUrl: this.data.inputValue
-      }
+      data: { episodeUrl: this.data.inputValue }
     }).then(res => {
-      const { success, m4aUrl, title, error } = res.result;
+      console.log('前端：云函数调用成功，原始返回:', res); 
+      
+      // 核心修正：强制将 res.result 从字符串解析为 JSON 对象
+      let resultObject = {};
+      if (typeof res.result === 'string') {
+          try {
+              resultObject = JSON.parse(res.result);
+              console.log('前端：res.result 字符串解析成功！', resultObject);
+          } catch (parseError) {
+              console.error('前端：res.result 字符串解析失败！', parseError);
+              // 如果解析失败，仍然使用原始 res.result，但可能导致后续错误
+              resultObject = res.result; 
+          }
+      } else {
+          // 如果res.result已经是对象，直接使用
+          resultObject = res.result;
+      }
+
+      const { success, m4aUrl, title, error } = resultObject; // 从解析后的对象中解构
 
       if (success) {
         this.setData({
@@ -143,20 +153,17 @@ Page({
           podcastTitle: title || '未知播客标题',
           inputValue: '', 
         });
+        console.log('前端：标题已设置:', this.data.podcastTitle);
       } else {
-        this.setData({
-          statusMessage: error || '发生未知错误'
-        });
+        this.setData({ statusMessage: error || '发生未知错误' });
+        console.log('前端：云函数返回失败:', error);
       }
     }).catch(err => {
-      console.error('云函数调用失败:', err);
-      this.setData({
-        statusMessage: '服务调用失败，请检查网络或稍后再试'
-      });
+      console.error('前端：云函数调用失败 (网络/API错误):', err); 
+      this.setData({ statusMessage: '服务调用失败，请检查网络或稍后再试' });
     }).finally(() => {
-      this.setData({
-        isLoading: false
-      });
+      this.setData({ isLoading: false });
+      console.log('前端：云函数调用流程结束');
     });
   },
 

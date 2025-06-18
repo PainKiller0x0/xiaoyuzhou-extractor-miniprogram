@@ -36,8 +36,7 @@
         <text class="result-icon">🔗</text>
         <text class="result-title">音频直链已生成</text>
       </view>
-      <text class="podcast-title">{{podcastTitle}}</text>
-      <text class="result-url clickable-url" user-select bind:tap="onCopyLinkOnly">{{resultUrl}}</text>
+      <text class="podcast-title">{{podcastTitle}}</text> <text class="result-url clickable-url" user-select bind:tap="onCopyLinkOnly">{{resultUrl}}</text>
       <text class="copy-hint-text">点击链接即可复制</text>
     </view>
   </block>

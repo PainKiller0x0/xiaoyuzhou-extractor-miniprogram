@@ -34,17 +34,17 @@
         <text class="result-icon">🔗</text>
         <text class="result-title">音频直链已生成</text>
       </view>
-      <text class="podcast-title">{{podcastTitle}}</text> <text class="result-url clickable-url" user-select bind:tap="onCopyTap">{{resultUrl}}</text>
-      <text class="copy-hint-text">点击链接即可复制</text>
+      <text class="podcast-title">{{podcastTitle}}</text>
+      <text class="result-url clickable-url" user-select bind:tap="onCopyLinkOnly">{{resultUrl}}</text> <text class="copy-hint-text">点击链接即可复制</text>
     </view>
   </block>
   
 </view>
 
 <view class="bottom-actions-fixed" style="padding-bottom: {{safeAreaBottom + 40}}rpx;"> 
-  <button class="action-button {{resultUrl ? 'copy-button' : 'extract-button'}}" bind:tap="{{resultUrl ? 'onCopyTap' : 'onExtractTap'}}" loading="{{isLoading}}" disabled="{{isLoading}}">
+  <button class="action-button {{resultUrl ? 'copy-button' : 'extract-button'}}" bind:tap="{{resultUrl ? 'onCopyAndNavigateTap' : 'onExtractTap'}}" loading="{{isLoading}}" disabled="{{isLoading}}">
     <text wx:if="{{isLoading}}">✨ 正在提取...</text>
-    <text wx:elif="{{resultUrl}}">📋 复制链接</text>
+    <text wx:elif="{{resultUrl}}">📋 复制 • 转写</text>
     <text wx:else>✨ 提取音频</text>
   </button>
 

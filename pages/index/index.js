@@ -10,8 +10,8 @@ Page({
     isLoading: false, // 控制“提取”按钮是否显示加载中状态
     statusMessage: '', // 用于显示错误或状态提示信息
     safeAreaBottom: 0, // 底部安全区域高度
-    // 新增：你的公众号文章链接，包含通义听悟小程序跳转
-    tongyiGongzhonghaoArticleUrl: 'https://mp.weixin.qq.com/s/w8O2PB-8hA5u27T7UuX7oQ', 
+    // 你的公众号文章链接，包含通义听悟小程序跳转
+    tongyiGongzhonghaoArticleUrl: 'https://mp.weixin.qq.com/s/w8O2PB-8hA5u27T7UuX7oQ',
   },
 
   /**
@@ -22,7 +22,7 @@ Page({
   },
 
   /**
-   * 获取底部安全区域信息 (已修正，使用新版 API)
+   * 获取底部安全区域信息
    */
   getSafeAreaInfo() {
     wx.getWindowInfo({
@@ -106,10 +106,34 @@ Page({
   },
 
   /**
-   * “复制链接”按钮 和 链接显示区域 的点击事件处理函数
-   * 0.2.0 版本核心修改：复制后直接跳转到公众号文章WebView
+   * 新增：仅复制链接到剪贴板，不进行跳转
    */
-  onCopyTap() {
+  onCopyLinkOnly() {
+    if (this.data.resultUrl) {
+      wx.setClipboardData({
+        data: this.data.resultUrl,
+        success: () => {
+          wx.showToast({
+            title: '已复制到剪贴板',
+            icon: 'success',
+            duration: 1500
+          });
+        },
+        fail: (err) => {
+          console.error('复制失败:', err);
+          wx.showToast({
+            title: '复制失败，请重试',
+            icon: 'none'
+          });
+        }
+      });
+    }
+  },
+
+  /**
+   * “复制 • 转写”按钮的点击事件处理函数 (复制并前往文章)
+   */
+  onCopyAndNavigateTap() { // 更改函数名以区分，并避免混淆
     if (this.data.resultUrl) {
       wx.setClipboardData({
         data: this.data.resultUrl,
@@ -120,7 +144,6 @@ Page({
             duration: 1500,
             success: () => {
               // 复制成功后，直接跳转到承载公众号文章的WebView页面
-              // 将公众号文章链接作为参数传递
               wx.navigateTo({
                 url: `/pages/go-to-tongyi/go-to-tongyi?url=${encodeURIComponent(this.data.tongyiGongzhonghaoArticleUrl)}`
               });
@@ -128,11 +151,11 @@ Page({
           });
         },
         fail: (err) => {
-            console.error('复制失败:', err);
-            wx.showToast({
-                title: '复制失败，请重试',
-                icon: 'none'
-            });
+          console.error('复制失败:', err);
+          wx.showToast({
+            title: '复制失败，请重试',
+            icon: 'none'
+          });
         }
       });
     }

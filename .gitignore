@@ -12,3 +12,6 @@ $RECYCLE.BIN/
 
 # Node.js
 node_modules/
+
+# Git 自动化提交脚本
+commit_and_push.bat

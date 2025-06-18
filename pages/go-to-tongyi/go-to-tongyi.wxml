@@ -1,0 +1,2 @@
+<!--pages/go-to-tongyi/go-to-tongyi.wxml-->
+<web-view src="{{articleUrl}}"></web-view>

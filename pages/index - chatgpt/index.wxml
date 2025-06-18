@@ -1,0 +1,40 @@
+<view class="container">
+  <!-- 顶部区域 -->
+  <view class="header">
+    <image class="logo" src="/images/logo.png" mode="aspectFit"></image>
+    <view class="title-text">音频直链提取器</view>
+    <view class="sub-text">小宇宙播客链接提取神器 ✨</view>
+  </view>
+
+  <!-- 输入区域 -->
+  <view class="input-wrapper">
+    <textarea class="url-input"
+      placeholder="请在此处粘贴小宇宙播客单集链接..."
+      model:value="{{inputValue}}"
+      auto-height
+      maxlength="-1"
+    ></textarea>
+  </view>
+
+  <!-- 按钮 -->
+  <button class="extract-button" bind:tap="onExtractTap" loading="{{isLoading}}">
+    {{isLoading ? '正在提取...' : '提 取 音 频'}}
+  </button>
+
+  <!-- ✅ 进度条 -->
+  <view class="progress-bar" wx:if="{{isLoading}}">
+    <view class="progress-inner" style="width: {{progress}}%"></view>
+  </view>
+
+  <!-- 提取结果 -->
+  <view class="result-area" wx:if="{{resultUrl}}">
+    <view class="result-label">📎 音频直链</view>
+    <view class="result-url-wrapper" bind:tap="onCopyTap">
+      <text class="result-url" user-select>{{resultUrl}}</text>
+    </view>
+    <button class="copy-button" bind:tap="onCopyTap">📋 复制链接</button>
+  </view>
+
+  <!-- 状态提示 -->
+  <view class="status-message" wx:if="{{statusMessage}}">{{statusMessage}}</view>
+</view>

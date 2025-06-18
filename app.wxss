@@ -1,4 +1,50 @@
 /**app.wxss**/
+/* --- 全局颜色变量定义 (浅色模式为默认) --- */
+page {
+  --bg-color: #f4f7f6;
+  --text-color: #333;
+  --title-color: #2c3e50;
+  --secondary-text-color: #7f8c8d;
+  --url-bg-color: #ffffff;
+  --border-color: #e0e6e8;
+  --url-border-color: #dce4e8;
+  --copy-btn-bg: #3498db;
+  --copy-btn-hover-bg: #2980b9;
+  --download-btn-bg: #2ecc71;
+  --download-btn-hover-bg: #27ae60;
+  --btn-text-color: white;
+  --btn-disabled-bg: #bdc3c7;
+  --status-success-color: #16a085;
+  --status-error-color: #e74c3c;
+  --status-warning-color: #f39c12;
+  --hover-bg-color: #eaf2f8;
+  --shadow-color: rgba(0,0,0,0.05);
+  --hover-shadow-color: rgba(0,0,0,0.1);
+  --label-color: var(--text-color);
+  --separator-color: #e0e0e0;
+}
+
+/* --- 暗色模式下的全局颜色变量覆盖 --- */
+@media (prefers-color-scheme: dark) {
+  page {
+    --bg-color: #2c3e50;
+    --text-color: #ecf0f1;
+    --title-color: #ffffff;
+    --secondary-text-color: #bdc3c7;
+    --url-bg-color: #34495e;
+    --border-color: #4a657c;
+    --url-border-color: #4a657c;
+    --btn-disabled-bg: #7f8c8d;
+    --status-success-color: #2ecc71;
+    --hover-bg-color: #3a5368;
+    --shadow-color: rgba(0,0,0,0.2);
+    --hover-shadow-color: rgba(0,0,0,0.3);
+    --label-color: var(--text-color);
+    --separator-color: #4a657c;
+  }
+}
+
+/* 你可以保留这里，或者删除掉。因为它已经被 pages/index/index.wxss 里的同名样式覆盖了 */
 .container {
   height: 100%;
   display: flex;
@@ -7,4 +53,4 @@
   justify-content: space-between;
   padding: 200rpx 0;
   box-sizing: border-box;
-} 
+}

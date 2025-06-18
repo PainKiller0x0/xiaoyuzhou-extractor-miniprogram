@@ -1,15 +1,14 @@
 {
   "name": "extractM4a",
   "version": "1.0.0",
-  "description": "",
+  "description": "用于提取小宇宙播客音频链接和标题的云函数",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "PainKiller0x0",
   "license": "ISC",
   "dependencies": {
-    "axios": "^1.10.0",
-    "wx-server-sdk": "~3.0.1"
+    "axios": "^1.10.0"
   }
 }

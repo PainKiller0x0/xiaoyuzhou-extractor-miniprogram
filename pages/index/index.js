@@ -29,7 +29,6 @@ Page({
       success: (res) => {
         const screenWidth = res.screenWidth;
         const minPaddingPx = 20 * (screenWidth / 750);
-
         let safeAreaBottom = 0;
         if (res.safeArea && res.screenHeight > res.safeArea.bottom) {
           safeAreaBottom = res.screenHeight - res.safeArea.bottom;
@@ -37,18 +36,16 @@ Page({
         if (safeAreaBottom < minPaddingPx) {
           safeAreaBottom = minPaddingPx;
         }
-
         this.setData({
           safeAreaBottom: safeAreaBottom
         });
-
         console.log('Window Info:', res);
         console.log('Calculated safeAreaBottom (px):', safeAreaBottom);
       },
       fail: (err) => {
         console.error('获取窗口信息失败', err);
         this.setData({
-          safeAreaBottom: 10
+          safeAreaBottom: 10 // 默认值
         });
       }
     });
@@ -59,19 +56,10 @@ Page({
    */
   onExtractTap() {
     if (!this.data.inputValue.trim()) {
-      wx.showToast({
-        title: '链接不能为空',
-        icon: 'none'
-      });
+      wx.showToast({ title: '链接不能为空', icon: 'none' });
       return;
     }
-
-    this.setData({
-      isLoading: true,
-      resultUrl: '',
-      podcastTitle: '',
-      statusMessage: ''
-    });
+    this.setData({ isLoading: true, resultUrl: '', podcastTitle: '', statusMessage: '' });
 
     wx.cloud.callFunction({
       name: 'extractM4a',
@@ -81,7 +69,6 @@ Page({
     }).then(res => {
       console.log('云函数调用成功:', res);
       const { success, m4aUrl, title, error } = res.result;
-
       if (success) {
         this.setData({
           resultUrl: m4aUrl,
@@ -106,63 +93,52 @@ Page({
   },
 
   /**
-   * 新增：仅复制链接到剪贴板，不进行跳转
+   * 【已修正函数名】仅复制链接到剪贴板 (提供给链接区域点击)
    */
   onCopyLinkOnly() {
     if (this.data.resultUrl) {
       wx.setClipboardData({
         data: this.data.resultUrl,
         success: () => {
-          wx.showToast({
-            title: '已复制到剪贴板',
-            icon: 'success',
-            duration: 1500
-          });
+          wx.showToast({ title: '已复制到剪贴板', icon: 'success', duration: 1500 });
         },
         fail: (err) => {
           console.error('复制失败:', err);
-          wx.showToast({
-            title: '复制失败，请重试',
-            icon: 'none'
-          });
+          wx.showToast({ title: '复制失败，请重试', icon: 'none' });
         }
       });
     }
   },
 
   /**
-   * “复制 • 转写”按钮的点击事件处理函数 (复制并前往文章)
+   * “复制 • 转写”按钮的点击事件处理函数
    */
-  onCopyAndNavigateTap() { // 更改函数名以区分，并避免混淆
+  onCopyAndNavigateTap() {
     if (this.data.resultUrl) {
       wx.setClipboardData({
         data: this.data.resultUrl,
         success: () => {
+          // 【优化点】复制成功后，同时进行提示和跳转，无需嵌套
           wx.showToast({
-            title: '已复制到剪贴板',
+            title: '已复制，即将跳转', // 提示文字可以优化
             icon: 'success',
-            duration: 1500,
-            success: () => {
-              // 复制成功后，直接跳转到承载公众号文章的WebView页面
-              wx.navigateTo({
-                url: `/pages/go-to-tongyi/go-to-tongyi?url=${encodeURIComponent(this.data.tongyiGongzhonghaoArticleUrl)}`
-              });
-            }
+            duration: 1500
+          });
+          // 直接进行跳转
+          wx.navigateTo({
+            url: `/pages/go-to-tongyi/go-to-tongyi?url=${encodeURIComponent(this.data.tongyiGongzhonghaoArticleUrl)}`
           });
         },
         fail: (err) => {
           console.error('复制失败:', err);
-          wx.showToast({
-            title: '复制失败，请重试',
-            icon: 'none'
-          });
+          wx.showToast({ title: '复制失败，请重试', icon: 'none' });
         }
       });
     }
   },
 
   /**
-   * 重新提取：重置页面状态，回到输入界面
+   * “提取新链接”按钮：重置页面状态
    */
   onResetTap() {
     this.setData({

@@ -1,19 +1,20 @@
-// pages/index/index.js
+// pages/index/index.js (最终合并版 v0.3.0 升级完成)
 Page({
   /**
    * 页面的初始数据
    */
   data: {
     inputValue: '', // 绑定输入框的内容
-    resultUrl: '', // 用于存储提取到的音频链接
-    podcastTitle: '', // 用于存储提取到的播客标题
-    isLoading: false, // 控制“提取”按钮是否显示加载中状态
-    statusMessage: '', // 用于显示错误或状态提示信息
-    safeAreaBottom: 0, // 底部安全区域高度
-    tongyiGongzhonghaoArticleUrl: 'https://mp.weixin.qq.com/s/w8O2PB-8hA5u27T7UuX7oQ', // 你的公众号文章链接
-
-    // 修正：简化动画状态变量，只用一个showPasteButton控制
-    showPasteButton: true, // 控制粘贴按钮是否显示，默认显示
+    lastInputValue: '', // 新增：用于“重试”功能，记住上一次的输入
+    resultUrl: '',
+    podcastTitle: '',
+    isLoading: false,
+    statusMessage: '',
+    errorType: '', // V0.3.0 新增：存储云函数返回的错误类型 (INVALID_LINK, PARSE_FAILED, NETWORK_ERROR)
+    safeAreaBottom: 0,
+    showPasteButton: true, // 你新增的：控制粘贴按钮是否显示
+    // showRetry: false, // 移除此变量，WXML中直接通过 errorType 判断是否显示重试按钮
+    tongyiGongzhonghaoArticleUrl: 'https://mp.weixin.qq.com/s/w8O2PB-8hA5u27T7UuX7oQ',
   },
 
   /**
@@ -25,34 +26,36 @@ Page({
 
   /**
    * 页面显示/从后台回到前台时
-   * 修正：确保按钮显示状态的正确性
+   * (保留你的优秀实现)
    */
   onShow() {
-      const shouldBeVisible = !this.data.inputValue.trim() && !this.data.resultUrl;
+      const shouldBeVisible = !this.data.inputValue.trim() && !this.data.resultUrl && !this.data.isLoading && !this.data.errorType;
       this.setData({ showPasteButton: shouldBeVisible });
   },
 
   /**
    * 监听输入框内容变化
+   * (保留你的优秀实现)
    */
   onInput(e) {
     const value = e.detail.value;
     this.setData({
       inputValue: value,
-      // 直接根据inputValue是否为空来控制showPasteButton
-      showPasteButton: !value.trim() 
+      showPasteButton: !value.trim(),
+      statusMessage: '', // 输入时清除状态信息
+      errorType: '',     // 输入时清除错误类型
+      // showRetry: false, // 移除，因为showRetry由errorType控制
     });
   },
 
   /**
-   * 获取底部安全区域信息
+   * 获取底部安全区域信息 (保持不变)
    */
   getSafeAreaInfo() {
     wx.getWindowInfo({
       success: (res) => {
         const screenWidth = res.screenWidth;
         const minPaddingPx = 20 * (screenWidth / 750);
-
         let safeAreaBottom = 0;
         if (res.safeArea && res.screenHeight > res.safeArea.bottom) {
           safeAreaBottom = res.screenHeight - res.safeArea.bottom;
@@ -60,22 +63,18 @@ Page({
         if (safeAreaBottom < minPaddingPx) {
           safeAreaBottom = minPaddingPx;
         }
-
-        this.setData({
-          safeAreaBottom: safeAreaBottom
-        });
+        this.setData({ safeAreaBottom: safeAreaBottom });
       },
       fail: (err) => {
         console.error('获取窗口信息失败', err);
-        this.setData({
-          safeAreaBottom: 10
-        });
+        this.setData({ safeAreaBottom: 10 });
       }
     });
   },
 
   /**
    * 粘贴链接按钮点击事件
+   * (保留你的优秀实现)
    */
   onPasteLinkTap() {
     wx.getClipboardData({
@@ -83,147 +82,148 @@ Page({
         const clipboardData = res.data.trim();
         if (clipboardData) {
           this.setData({
-            inputValue: clipboardData, // 将剪贴板内容填充到输入框
-            showPasteButton: false // 粘贴后立即隐藏按钮
+            inputValue: clipboardData,
+            showPasteButton: false,
+            statusMessage: '', // 粘贴时清除状态信息
+            errorType: '',     // 粘贴时清除错误类型
+            // showRetry: false, // 移除
           }, () => {
-            wx.showToast({
-              title: '已粘贴', 
-              icon: 'none',
-              duration: 1000
-            });
+            wx.showToast({ title: '已粘贴', icon: 'none', duration: 1000 });
           });
         } else {
-          wx.showToast({
-            title: '剪贴板没有内容',
-            icon: 'none'
-          });
+          wx.showToast({ title: '剪贴板没有内容', icon: 'none' });
         }
       },
       fail: (err) => {
         console.error('获取剪贴板数据失败:', err);
-        wx.showToast({
-          title: '无法获取剪贴板内容',
-          icon: 'none'
-        });
+        wx.showToast({ title: '无法获取剪贴板内容', icon: 'none' });
       }
     });
   },
 
   /**
-   * “提取音频”按钮的点击事件处理函数
+   * “提取音频”按钮的点击事件处理函数 (已升级)
    */
   onExtractTap() {
-    console.log('前端：即将调用云函数 extractM4a'); 
-
-    if (!this.data.inputValue.trim()) {
-      wx.showToast({ title: '链接不能为空', icon: 'none' });
-      console.log('前端：输入框为空，调用取消');
+    const urlToExtract = this.data.inputValue.trim();
+    if (!urlToExtract) {
+      this.setData({
+        statusMessage: '请输入小宇宙播客单集链接',
+        errorType: 'INVALID_LINK' // 没有输入链接，也视为无效链接错误
+      });
       return;
     }
 
-    this.setData({ isLoading: true, resultUrl: '', podcastTitle: '', statusMessage: '', showPasteButton: false });
+    this.setData({
+      isLoading: true,
+      resultUrl: '',
+      podcastTitle: '',
+      statusMessage: '正在分析链接，请稍候...', // 提取开始时的提示信息
+      errorType: '',     // 开始提取时清除所有错误状态
+      // showRetry: false, // 移除
+      showPasteButton: false, // 提取时隐藏粘贴按钮
+      lastInputValue: urlToExtract, // 记住本次提取的链接，以备重试
+    });
 
     wx.cloud.callFunction({
       name: 'extractM4a',
-      data: { episodeUrl: this.data.inputValue }
+      data: { episodeUrl: urlToExtract }
     }).then(res => {
-      console.log('前端：云函数调用成功，原始返回:', res); 
-      
-      // 核心修正：强制将 res.result 从字符串解析为 JSON 对象
-      let resultObject = {};
-      if (typeof res.result === 'string') {
-          try {
-              resultObject = JSON.parse(res.result);
-              console.log('前端：res.result 字符串解析成功！', resultObject);
-          } catch (parseError) {
-              console.error('前端：res.result 字符串解析失败！', parseError);
-              // 如果解析失败，仍然使用原始 res.result，但可能导致后续错误
-              resultObject = res.result; 
-          }
-      } else {
-          // 如果res.result已经是对象，直接使用
-          resultObject = res.result;
-      }
-
-      const { success, m4aUrl, title, error } = resultObject; // 从解析后的对象中解构
+      console.log('云函数调用成功:', res);
+      // 云函数返回的数据在 res.result 中
+      const { success, m4aUrl, title, error, errorCode } = res.result;
 
       if (success) {
         this.setData({
           resultUrl: m4aUrl,
           podcastTitle: title || '未知播客标题',
-          inputValue: '', 
+          inputValue: '', // 成功后清空输入框
+          statusMessage: '链接提取成功！', // 成功提示
+          errorType: '', // 成功则清除错误类型
         });
-        console.log('前端：标题已设置:', this.data.podcastTitle);
+        wx.showToast({ title: '提取成功', icon: 'success', duration: 1500 });
       } else {
-        this.setData({ statusMessage: error || '发生未知错误' });
-        console.log('前端：云函数返回失败:', error);
+        // --- 核心修改：根据 errorCode 显示不同信息和按钮 ---
+        console.error(`云函数返回错误: [${errorCode}] ${error}`);
+        this.setData({
+          statusMessage: error || '发生未知错误', // 显示云函数返回的错误信息
+          errorType: errorCode || 'UNKNOWN_ERROR', // 保存错误类型
+        });
+        wx.showToast({ title: '提取失败', icon: 'error', duration: 2000 });
       }
     }).catch(err => {
-      console.error('前端：云函数调用失败 (网络/API错误):', err); 
-      this.setData({ statusMessage: '服务调用失败，请检查网络或稍后再试' });
+      // 云函数调用本身失败，例如网络连接问题，或云函数部署问题
+      console.error('云函数调用失败:', err);
+      this.setData({
+        statusMessage: '服务连接失败，请检查网络或稍后再试。',
+        errorType: 'NETWORK_ERROR', // 客户端调用失败也视为网络错误
+      });
+      wx.showToast({ title: '请求失败', icon: 'error', duration: 2000 });
     }).finally(() => {
-      this.setData({ isLoading: false });
-      console.log('前端：云函数调用流程结束');
+      this.setData({
+        isLoading: false
+      });
+      // 在处理完结果或错误后，重新评估粘贴按钮的显示
+      this.onShow(); 
     });
   },
 
   /**
-   * 仅复制链接到剪贴板，不进行跳转
+   * --- 新增：“重试”按钮的点击事件 ---
+   */
+  onRetryTap() {
+    this.setData({
+      inputValue: this.data.lastInputValue, // 将之前失败的链接填回输入框
+      statusMessage: '', // 清除之前的错误提示
+      errorType: '',     // 清除之前的错误类型
+      // showRetry: false, // 移除
+    }, () => {
+      this.onExtractTap(); // 再次调用提取函数
+    });
+  },
+  
+  /**
+   * --- 新增：“反馈问题”的点击事件 (更新为跳转到反馈页面) ---
+   */
+  onFeedbackTap() {
+    wx.navigateTo({
+      url: '/pages/feedback/feedback' // 跳转到新的反馈页面
+    });
+  },
+
+  /**
+   * 仅复制链接到剪贴板 (保持不变)
    */
   onCopyLinkOnly() {
     if (this.data.resultUrl) {
       wx.setClipboardData({
         data: this.data.resultUrl,
-        success: () => {
-          wx.showToast({
-            title: '已复制', 
-            icon: 'success',
-            duration: 1500
-          });
-        },
-        fail: (err) => {
-          console.error('复制失败:', err);
-          wx.showToast({
-            title: '复制失败', 
-            icon: 'none'
-          });
-        }
+        success: () => { wx.showToast({ title: '已复制', icon: 'success', duration: 1500 }); },
+        fail: () => { wx.showToast({ title: '复制失败', icon: 'none' }); }
       });
     }
   },
 
   /**
-   * “复制 • 转写”按钮的点击事件处理函数 (复制并前往文章)
+   * “复制 • 转写”按钮的点击事件处理函数 (保持不变)
    */
   onCopyAndNavigateTap() {
     if (this.data.resultUrl) {
       wx.setClipboardData({
         data: this.data.resultUrl,
         success: () => {
-          wx.showToast({
-            title: '已复制', 
-            icon: 'success',
-            duration: 1500,
-            success: () => {
-              wx.navigateTo({
-                url: `/pages/go-to-tongyi/go-to-tongyi?url=${encodeURIComponent(this.data.tongyiGongzhonghaoArticleUrl)}`
-              });
-            }
+          wx.showToast({ title: '已复制，即将跳转', icon: 'success', duration: 1500 });
+          wx.navigateTo({
+            url: `/pages/go-to-tongyi/go-to-tongyi?url=${encodeURIComponent(this.data.tongyiGongzhonghaoArticleUrl)}`
           });
         },
-        fail: (err) => {
-          console.error('复制失败:', err);
-          wx.showToast({
-            title: '复制失败', 
-            icon: 'none'
-          });
-        }
+        fail: () => { wx.showToast({ title: '复制失败', icon: 'none' }); }
       });
     }
   },
 
   /**
-   * 重新提取：重置页面状态，回到输入界面
+   * “提取新链接”按钮：重置页面状态 (已升级)
    */
   onResetTap() {
     this.setData({
@@ -232,7 +232,9 @@ Page({
       podcastTitle: '',
       isLoading: false,
       statusMessage: '',
+      errorType: '', // 重置时清除错误类型
       showPasteButton: true, // 回到输入界面时，显示粘贴按钮
+      // showRetry: false, // 移除
     });
   }
 });

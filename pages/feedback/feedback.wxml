@@ -1,0 +1,35 @@
+<view class="container">
+  <view class="form-card">
+    <text class="form-title">您的宝贵反馈</text>
+    <text class="form-description">请尽可能详细地描述您遇到的问题或建议，我们将认真阅读并改进。</text>
+
+    <view class="input-group">
+      <text class="label">反馈内容 <text class="required">*</text></text>
+      <textarea
+        class="feedback-textarea"
+        placeholder="例如：提取某个链接时一直显示网络错误，链接是 https://..."
+        maxlength="500"
+        auto-height
+        model:value="{{feedbackContent}}"
+        bindinput="onFeedbackContentInput"
+        placeholder-class="textarea-placeholder"
+      ></textarea>
+      <text class="char-count">{{feedbackContent.length}}/500</text>
+    </view>
+
+    <view class="input-group">
+      <text class="label">联系方式 (可选)</text>
+      <input
+        class="contact-input"
+        placeholder="例如：您的微信号或邮箱，方便我们与您沟通"
+        model:value="{{contactInfo}}"
+        bindinput="onContactInfoInput"
+        placeholder-class="input-placeholder"
+      />
+    </view>
+
+    <button class="submit-button" bindtap="onSubmitFeedback" loading="{{isSubmitting}}" disabled="{{isSubmitting}}">
+      {{isSubmitting ? '提交中...' : '提交反馈'}}
+    </button>
+  </view>
+</view>

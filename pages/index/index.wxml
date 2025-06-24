@@ -23,10 +23,23 @@
         placeholder-class="input-placeholder"
       ></textarea>
       <button class="paste-link-button {{showPasteButton ? 'paste-link-button--visible' : 'paste-link-button--hidden'}}" 
-              bind:tap="onPasteLinkTap"></button> </view>
-    <view class="status-message-box" wx:if="{{statusMessage}}">
-      <text class="status-message-icon">⚠️</text>
-      <text class="status-message-text">{{statusMessage}}</text>
+              bind:tap="onPasteLinkTap"></button>  </view>
+    
+    <view class="status-message-box" wx:if="{{statusMessage || errorType}}">
+        <block wx:if="{{errorType}}">
+            <text class="status-message-icon">⚠️</text>
+            <text class="status-message-text status-error-text">{{statusMessage}}</text>
+            <button class="retry-button" 
+                    wx:if="{{errorType === 'PARSE_FAILED' || errorType === 'NETWORK_ERROR'}}" 
+                    bind:tap="onRetryTap">重试</button>
+            <button class="feedback-button"
+                    wx:if="{{errorType === 'PARSE_FAILED' || errorType === 'NETWORK_ERROR'}}"
+                    bind:tap="onFeedbackTap">反馈问题</button>
+        </block>
+        <block wx:elif="{{statusMessage}}">
+            <text class="status-message-icon">💡</text>
+            <text class="status-message-text">{{statusMessage}}</text>
+        </block>
     </view>
   </block>
 

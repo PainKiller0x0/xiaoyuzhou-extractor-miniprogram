@@ -1,7 +1,9 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/go-to-tongyi/go-to-tongyi"
+    "pages/go-to-tongyi/go-to-tongyi",
+    "pages/feedback",
+    "pages/feedback/feedback"
   ],
   "window": {
     "navigationBarTextStyle": "black",

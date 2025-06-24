@@ -1,0 +1,132 @@
+/* pages/feedback/feedback.wxss */
+@import "/app.wxss"; /* 导入全局样式变量，如 --status-error-color */
+
+.container {
+  padding: 40rpx;
+  background-color: var(--bg-color, #f4f7f6); /* 使用全局背景色变量 */
+  min-height: 100vh;
+  display: flex;
+  justify-content: center; /* 水平居中 */
+  align-items: center;   /* 垂直居中 */
+  box-sizing: border-box;
+}
+
+.form-card {
+  background-color: var(--url-bg-color, #ffffff); /* 使用全局卡片背景色变量 */
+  border-radius: 20rpx;
+  box-shadow: 0 8rpx 20rpx var(--shadow-color, rgba(0, 0, 0, 0.08)); /* 使用全局阴影变量 */
+  padding: 40rpx;
+  width: calc(100% - 80rpx); /* 占据屏幕宽度的90%左右，减去左右padding */
+  max-width: 600rpx; /* 限制最大宽度，用于大屏幕设备 */
+  box-sizing: border-box;
+  min-height: 800rpx; /* 增加整体高度，确保视觉舒展 */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* 内部元素在垂直方向上均匀分布 */
+}
+
+.form-title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: var(--title-color, #2c3e50); /* 使用全局标题颜色变量 */
+  text-align: center;
+  display: block;
+  margin-bottom: 30rpx; /* 增加标题下方间距 */
+}
+
+.form-description {
+  font-size: 28rpx;
+  color: var(--secondary-text-color, #7f8c8d); /* 使用全局辅助文本颜色变量 */
+  text-align: center;
+  display: block;
+  margin-bottom: 50rpx; /* 增加描述下方间距 */
+  line-height: 1.5;
+}
+
+.input-group {
+  margin-bottom: 50rpx; /* 增加输入组之间的间距 */
+  flex-grow: 1; /* 让输入组尽可能占据剩余空间，特别是textarea所在组 */
+}
+
+.label {
+  font-size: 30rpx;
+  color: var(--label-color, #34495e); /* 使用全局label颜色变量 */
+  font-weight: 500;
+  margin-bottom: 20rpx; /* 增加label下方间距 */
+  display: block;
+}
+
+.required {
+  color: var(--status-error-color, #e74c3c); /* 使用全局错误颜色变量，提供默认值 */
+  margin-left: 5rpx;
+}
+
+.feedback-textarea {
+  width: 100%;
+  min-height: 250rpx; /* 增加最小高度，让文本域更高 */
+  padding: 25rpx;
+  border: 1rpx solid var(--border-color, #e0e6e8); /* 使用全局边框颜色变量 */
+  border-radius: 12rpx;
+  font-size: 30rpx;
+  color: var(--text-color, #333); /* 使用全局文本颜色变量 */
+  box-sizing: border-box;
+  background-color: var(--url-bg-color, #fcfdfe); /* 可以用卡片背景色，或者专门定义输入框背景色 */
+}
+
+.textarea-placeholder {
+  color: var(--secondary-text-color, #b0bec5); /* 使用全局辅助文本颜色变量 */
+}
+
+.char-count {
+  font-size: 24rpx;
+  color: var(--secondary-text-color, #7f8c8d); /* 使用全局辅助文本颜色变量 */
+  text-align: right;
+  display: block;
+  margin-top: 10rpx;
+}
+
+.contact-input {
+  width: 100%;
+  height: 96rpx; /* 增加高度 */
+  padding: 0 25rpx;
+  border: 1rpx solid var(--border-color, #e0e6e8); /* 使用全局边框颜色变量 */
+  border-radius: 12rpx;
+  font-size: 30rpx;
+  color: var(--text-color, #333); /* 使用全局文本颜色变量 */
+  box-sizing: border-box;
+  background-color: var(--url-bg-color, #fcfdfe); /* 可以用卡片背景色，或者专门定义输入框背景色 */
+  line-height: 96rpx; /* 使placeholder文本垂直居中 */
+  white-space: nowrap; /* 避免placeholder文本换行 */
+  overflow: hidden; /* 隐藏超出部分 */
+  text-overflow: ellipsis; /* 显示省略号 */
+}
+
+.input-placeholder {
+  color: var(--secondary-text-color, #b0bec5); /* 使用全局辅助文本颜色变量 */
+}
+
+.submit-button {
+  width: 100%;
+  height: 96rpx;
+  background: linear-gradient(to right, var(--download-btn-bg, #2ecc71), var(--download-btn-hover-bg, #27ae60)); /* 使用全局按钮颜色变量 */
+  color: var(--btn-text-color, white); /* 使用全局按钮文本颜色变量 */
+  font-size: 34rpx;
+  font-weight: bold;
+  border-radius: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 20rpx var(--shadow-color, rgba(0, 0, 0, 0.15)); /* 使用全局阴影变量 */
+  transition: all 0.2s ease-in-out;
+  margin-top: 20rpx;
+}
+
+.submit-button[disabled] {
+  background: linear-gradient(to right, var(--btn-disabled-bg, #a5d6a7), var(--btn-disabled-bg, #81c784)) !important; /* 使用全局禁用按钮颜色变量 */
+  opacity: 0.8;
+}
+
+.submit-button:active {
+  transform: translateY(2rpx) scale(0.98);
+  box-shadow: 0 4rpx 10rpx var(--shadow-color, rgba(0, 0, 0, 0.1));
+}

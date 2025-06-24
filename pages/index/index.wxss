@@ -1,5 +1,6 @@
 /* pages/index/index.wxss */
 
+/* --- 现有样式保持不变 --- */
 /* 整体页面容器样式 */
 .container {
   padding: 60rpx 40rpx 0;
@@ -310,24 +311,71 @@
 .status-message-box {
   margin-top: 40rpx;
   padding: 20rpx 30rpx;
-  background-color: #fcebeb;
-  border: 1rpx solid #ea6a6a;
+  background-color: #fcebeb; /* 浅红色背景 */
+  border: 1rpx solid #ea6a6a; /* 红色边框 */
   border-radius: 16rpx;
   display: flex;
-  align-items: center;
+  flex-direction: column; /* 改为列布局，以便按钮垂直排列 */
+  align-items: center; /* 居中对齐 */
   width: 100%;
   box-sizing: border-box;
   animation: fadeIn 0.4s ease-out forwards;
 }
 .status-message-icon {
   font-size: 36rpx;
-  margin-right: 15rpx;
-  color: #ea6a6a;
+  margin-right: 0; /* 图标独立一行，取消右边距 */
+  margin-bottom: 10rpx; /* 图标下方留白 */
+  color: var(--status-error-color); /* 使用全局错误颜色变量 */
 }
 .status-message-text {
   font-size: 28rpx;
-  color: #c0392b;
+  color: var(--text-color); /* 默认使用文本颜色 */
   line-height: 1.4;
+  text-align: center; /* 文本居中 */
+  margin-bottom: 20rpx; /* 文本下方留白 */
+}
+
+/* 新增：错误状态下的文本颜色 */
+.status-error-text {
+    color: var(--status-error-color); /* 使用全局错误颜色变量 */
+    font-weight: 500;
+}
+
+/* 新增：重试按钮和反馈按钮样式 */
+.retry-button,
+.feedback-button {
+    width: 80%; /* 按钮宽度 */
+    height: 80rpx;
+    font-size: 30rpx;
+    font-weight: 500;
+    border-radius: 40rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease-in-out;
+    margin-top: 15rpx; /* 按钮之间间距 */
+    box-sizing: border-box;
+    border: 1rpx solid;
+}
+
+.retry-button {
+    background-color: var(--copy-btn-bg);
+    color: var(--btn-text-color);
+    border-color: var(--copy-btn-bg);
+}
+.retry-button:active {
+    background-color: var(--copy-btn-hover-bg);
+    transform: scale(0.98);
+}
+
+.feedback-button {
+    background-color: transparent;
+    color: var(--secondary-text-color);
+    border-color: var(--secondary-text-color);
+}
+.feedback-button:active {
+    background-color: rgba(127, 140, 141, 0.1);
+    transform: scale(0.98);
 }
 
 /* 动画效果 */

@@ -1,19 +1,19 @@
-// pages/index/index.js (最终合并版 v0.3.0 升级完成)
+// pages/index/index.js (最终合并版 v0.3.0 升级完成，并修复了所有已知Bug)
 Page({
   /**
    * 页面的初始数据
    */
   data: {
     inputValue: '', // 绑定输入框的内容
-    lastInputValue: '', // 新增：用于“重试”功能，记住上一次的输入
+    lastInputValue: '', // 用于“重试”功能，记住上一次的输入
     resultUrl: '',
     podcastTitle: '',
     isLoading: false,
     statusMessage: '',
-    errorType: '', // V0.3.0 新增：存储云函数返回的错误类型 (INVALID_LINK, PARSE_FAILED, NETWORK_ERROR)
-    safeAreaBottom: 0,
-    showPasteButton: true, // 你新增的：控制粘贴按钮是否显示
-    // showRetry: false, // 移除此变量，WXML中直接通过 errorType 判断是否显示重试按钮
+    errorType: '', // 存储云函数返回的错误类型 (INVALID_LINK, PARSE_FAILED, NETWORK_ERROR)
+    safeAreaBottom: 0, // 底部安全区高度 (rpx单位)
+    containerPaddingBottom: 0, // 动态计算页面的底部填充 (rpx单位)
+    showPasteButton: true, // 控制粘贴按钮是否显示
     tongyiGongzhonghaoArticleUrl: 'https://mp.weixin.qq.com/s/w8O2PB-8hA5u27T7UuX7oQ',
   },
 
@@ -26,16 +26,15 @@ Page({
 
   /**
    * 页面显示/从后台回到前台时
-   * (保留你的优秀实现)
    */
   onShow() {
-      const shouldBeVisible = !this.data.inputValue.trim() && !this.data.resultUrl && !this.data.isLoading && !this.data.errorType;
+      // 只有在非加载、无结果、无输入内容且无错误时显示粘贴按钮
+      const shouldBeVisible = !this.data.isLoading && !this.data.resultUrl && !this.data.inputValue.trim() && !this.data.errorType;
       this.setData({ showPasteButton: shouldBeVisible });
   },
 
   /**
    * 监听输入框内容变化
-   * (保留你的优秀实现)
    */
   onInput(e) {
     const value = e.detail.value;
@@ -44,37 +43,76 @@ Page({
       showPasteButton: !value.trim(),
       statusMessage: '', // 输入时清除状态信息
       errorType: '',     // 输入时清除错误类型
-      // showRetry: false, // 移除，因为showRetry由errorType控制
     });
   },
 
   /**
-   * 获取底部安全区域信息 (保持不变)
+   * 获取底部安全区域信息，并计算页面的底部填充
    */
   getSafeAreaInfo() {
-    wx.getWindowInfo({
+    wx.getSystemInfo({ // 使用 getSystemInfo 更通用且包含 windowInfo
       success: (res) => {
         const screenWidth = res.screenWidth;
-        const minPaddingPx = 20 * (screenWidth / 750);
-        let safeAreaBottom = 0;
-        if (res.safeArea && res.screenHeight > res.safeArea.bottom) {
-          safeAreaBottom = res.screenHeight - res.safeArea.bottom;
+        let safeAreaBottomPx = 0;
+        // 如果 safeArea.bottom 小于 windowHeight，说明没有底部安全区或安全区很小
+        if (res.safeArea && res.safeArea.bottom < res.windowHeight) {
+          safeAreaBottomPx = 0; // 此时安全区为0，或者已经包含在windowHeight内
+        } else if (res.safeArea && res.safeArea.bottom > res.windowHeight) {
+          safeAreaBottomPx = res.safeArea.bottom - res.windowHeight;
         }
-        if (safeAreaBottom < minPaddingPx) {
-          safeAreaBottom = minPaddingPx;
-        }
-        this.setData({ safeAreaBottom: safeAreaBottom });
+        
+        // 将px单位的安全区高度转换为rpx
+        const safeAreaBottomRpx = safeAreaBottomPx * (750 / screenWidth);
+
+        // 计算底部固定区域的总高度 (单位rpx)
+        // bottom-actions-fixed 的 padding-top: 20rpx
+        // 主按钮高度: 108rpx
+        // secondary-action-area (提取新链接) 的 margin-top: 30rpx
+        // secondary-button 的高度: 40rpx
+        // error-action-area (重试/反馈) 的 margin-top: 30rpx
+        // 重试/反馈按钮的高度: 80rpx (两个按钮，每个80rpx，间距15rpx)
+
+        // 我们需要计算底部操作区可能的最大高度。
+        // case 1: 只有主按钮 (提取音频)
+        // case 2: 有主按钮 (复制) + 次要按钮 (提取新链接)
+        // case 3: 处于错误状态 (主按钮变为重新开始) + 重试 + 反馈
+        
+        // 计算各个组件的固定高度（不含内部margin/padding，那些已在wxss中考虑）
+        const mainButtonHeight = 108; // 主按钮固定高度
+        const secondaryAreaHeight = 30 + 40; // secondary-action-area 的 margin-top + secondary-button 高度
+        const errorActionAreaHeight = 30 + 80 + 15 + 80; // error-action-area 的 margin-top + retry-button + margin + feedback-button
+        const bottomActionsFixedBasePadding = 20 + 40; // bottom-actions-fixed 的 padding-top + 内联 padding-bottom 的固定部分
+
+        // 取所有可能情况中的最大底部区域高度，再加上安全区和额外间距
+        let maxBottomAreaContentHeight = Math.max(
+          mainButtonHeight,                       // 只有主按钮
+          mainButtonHeight + secondaryAreaHeight, // 主按钮 + 提取新链接
+          mainButtonHeight + errorActionAreaHeight // 主按钮 (重新开始) + 重试 + 反馈
+        );
+
+        // 最终容器底部填充 = 最大内容高度 + bottomActionsFixedBasePadding + safeAreaBottomRpx + 额外间距
+        const extraBottomSpacing = 60; // 额外增加一些间距，防止刚好贴边
+
+        const calculatedContainerPaddingBottom = maxBottomAreaContentHeight + bottomActionsFixedBasePadding + safeAreaBottomRpx + extraBottomSpacing;
+
+        this.setData({ 
+          safeAreaBottom: safeAreaBottomRpx, // 存储rpx单位的安全区高度
+          containerPaddingBottom: calculatedContainerPaddingBottom // 更新页面的底部填充
+        });
       },
       fail: (err) => {
-        console.error('获取窗口信息失败', err);
-        this.setData({ safeAreaBottom: 10 });
+        console.error('获取系统信息失败', err);
+        // 失败时的默认值，一个较大的值确保内容不被遮挡
+        this.setData({ 
+          safeAreaBottom: 10, // 默认10rpx
+          containerPaddingBottom: 400 // 较大的默认值，确保安全
+        });
       }
     });
   },
 
   /**
    * 粘贴链接按钮点击事件
-   * (保留你的优秀实现)
    */
   onPasteLinkTap() {
     wx.getClipboardData({
@@ -86,7 +124,6 @@ Page({
             showPasteButton: false,
             statusMessage: '', // 粘贴时清除状态信息
             errorType: '',     // 粘贴时清除错误类型
-            // showRetry: false, // 移除
           }, () => {
             wx.showToast({ title: '已粘贴', icon: 'none', duration: 1000 });
           });
@@ -102,7 +139,7 @@ Page({
   },
 
   /**
-   * “提取音频”按钮的点击事件处理函数 (已升级)
+   * “提取音频”按钮的点击事件处理函数
    */
   onExtractTap() {
     const urlToExtract = this.data.inputValue.trim();
@@ -120,7 +157,6 @@ Page({
       podcastTitle: '',
       statusMessage: '正在分析链接，请稍候...', // 提取开始时的提示信息
       errorType: '',     // 开始提取时清除所有错误状态
-      // showRetry: false, // 移除
       showPasteButton: false, // 提取时隐藏粘贴按钮
       lastInputValue: urlToExtract, // 记住本次提取的链接，以备重试
     });
@@ -143,7 +179,7 @@ Page({
         });
         wx.showToast({ title: '提取成功', icon: 'success', duration: 1500 });
       } else {
-        // --- 核心修改：根据 errorCode 显示不同信息和按钮 ---
+        // 根据 errorCode 显示不同信息和按钮
         console.error(`云函数返回错误: [${errorCode}] ${error}`);
         this.setData({
           statusMessage: error || '发生未知错误', // 显示云函数返回的错误信息
@@ -169,21 +205,20 @@ Page({
   },
 
   /**
-   * --- 新增：“重试”按钮的点击事件 ---
+   * “重试”按钮的点击事件
    */
   onRetryTap() {
     this.setData({
       inputValue: this.data.lastInputValue, // 将之前失败的链接填回输入框
       statusMessage: '', // 清除之前的错误提示
       errorType: '',     // 清除之前的错误类型
-      // showRetry: false, // 移除
     }, () => {
       this.onExtractTap(); // 再次调用提取函数
     });
   },
   
   /**
-   * --- 新增：“反馈问题”的点击事件 (更新为跳转到反馈页面) ---
+   * “反馈问题”的点击事件 (跳转到新的反馈页面)
    */
   onFeedbackTap() {
     wx.navigateTo({
@@ -192,7 +227,7 @@ Page({
   },
 
   /**
-   * 仅复制链接到剪贴板 (保持不变)
+   * 仅复制链接到剪贴板
    */
   onCopyLinkOnly() {
     if (this.data.resultUrl) {
@@ -205,7 +240,7 @@ Page({
   },
 
   /**
-   * “复制 • 转写”按钮的点击事件处理函数 (保持不变)
+   * “复制 • 转写”按钮的点击事件处理函数
    */
   onCopyAndNavigateTap() {
     if (this.data.resultUrl) {
@@ -223,7 +258,7 @@ Page({
   },
 
   /**
-   * “提取新链接”按钮：重置页面状态 (已升级)
+   * “提取新链接”按钮：重置页面状态
    */
   onResetTap() {
     this.setData({
@@ -234,7 +269,6 @@ Page({
       statusMessage: '',
       errorType: '', // 重置时清除错误类型
       showPasteButton: true, // 回到输入界面时，显示粘贴按钮
-      // showRetry: false, // 移除
     });
   }
 });

@@ -1,14 +1,15 @@
 /* pages/index/index.wxss */
+@import "/app.wxss"; /* 确保导入全局样式变量 */
 
-/* --- 现有样式保持不变 --- */
 /* 整体页面容器样式 */
 .container {
-  padding: 60rpx 40rpx 0;
+  padding: 60rpx 40rpx 0; /* 顶部和左右的padding，移除硬编码的 padding-bottom */
+  /* 这里的 padding-bottom 将通过 WXML 的 style 动态设置 */
   display: flex;
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
-  background: linear-gradient(to bottom, #f0f2f5, #e0e4eb);
+  background: linear-gradient(to bottom, var(--bg-color), var(--hover-bg-color)); /* 使用全局颜色变量 */
   min-height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
@@ -25,7 +26,7 @@
   height: 180rpx;
   margin-bottom: 30rpx;
   border-radius: 36rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8rpx 24rpx var(--shadow-color); /* 使用全局阴影变量 */
   border: 4rpx solid rgba(255, 255, 255, 0.6);
 }
 .title-wrapper {
@@ -36,19 +37,19 @@
 .main-title {
   font-size: 56rpx;
   font-weight: 700;
-  color: #2c3e50;
+  color: var(--title-color); /* 使用全局标题颜色变量 */
   margin-bottom: 10rpx;
   text-shadow: 1rpx 1rpx 2rpx rgba(0,0,0,0.05);
 }
 .sub-title {
   font-size: 36rpx;
   font-weight: 500;
-  color: #55606e;
+  color: var(--secondary-text-color); /* 使用全局辅助文本颜色变量 */
   margin-bottom: 20rpx;
 }
 .description-text {
   font-size: 28rpx;
-  color: #7f8c8d;
+  color: var(--secondary-text-color); /* 使用全局辅助文本颜色变量 */
   text-align: center;
   line-height: 1.4;
   padding: 0 20rpx;
@@ -69,10 +70,10 @@
 /* 基础卡片样式，用于输入框和结果链接 */
 .content-card-base {
   width: 100%;
-  background-color: #ffffff;
+  background-color: var(--url-bg-color); /* 使用全局URL背景色变量 */
   border-radius: 20rpx;
-  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.08);
-  border: 1rpx solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8rpx 20rpx var(--shadow-color); /* 使用全局阴影变量 */
+  border: 1rpx solid var(--border-color); /* 使用全局边框颜色变量 */
   box-sizing: border-box;
   animation: fadeIn 0.5s ease-out forwards; /* 整个卡片出现时的动画 */
   position: relative; /* 确保粘贴按钮可以相对定位 */
@@ -93,12 +94,12 @@
   height: auto;
   font-size: 32rpx;
   line-height: 1.6;
-  color: #34495e;
+  color: var(--text-color); /* 使用全局文本颜色变量 */
   box-sizing: border-box;
   flex-grow: 1;
 }
 .input-placeholder {
-  color: #b0bec5;
+  color: var(--secondary-text-color); /* 使用全局辅助文本颜色变量 */
 }
 
 /* 粘贴链接按钮样式 (完整动画控制) */
@@ -107,7 +108,7 @@
   right: 25rpx;
   bottom: 25rpx;
   background-color: rgba(0, 0, 0, 0.08);
-  color: #55606e;
+  color: var(--secondary-text-color); /* 使用全局辅助文本颜色变量 */
   font-size: 26rpx;
   padding: 16rpx 32rpx;
   border-radius: 12rpx;
@@ -170,14 +171,12 @@
 .result-icon {
   font-size: 48rpx;
   margin-right: 15rpx;
-  color: var(--copy-btn-bg);
+  color: var(--copy-btn-bg); /* 使用全局复制按钮背景色变量 */
 }
-/* === 修正：确保 .result-title 可见性 === */
 .result-title {
   font-size: 38rpx;
   font-weight: 600;
-  color: #2c3e50 !important; /* 强制确保颜色清晰可见，使用深色 */
-  /* 以下强制规则，防止被意外隐藏 */
+  color: var(--title-color) !important; /* 强制确保颜色清晰可见，使用深色 */
   opacity: 1 !important;
   display: block !important;
   visibility: visible !important;
@@ -186,29 +185,28 @@
   z-index: auto !important;
   position: static !important;
 }
-/* === 修正结束 === */
 
 .podcast-title {
   font-size: 32rpx;
   font-weight: 500;
-  color: #2c3e50 !important; /* 强制确保颜色清晰可见，使用深色 */
+  color: var(--title-color) !important; /* 强制确保颜色清晰可见，使用深色 */
   text-align: center;
   word-break: break-all;
   line-height: 1.5;
   margin-bottom: 25rpx;
   padding: 0 10rpx;
-  opacity: 1 !important; /* 强制不透明 */
-  display: block !important; /* 强制显示为块级元素 */
-  visibility: visible !important; /* 强制可见 */
-  height: auto !important; /* 强制高度自适应 */
-  overflow: visible !important; /* 强制不裁剪内容 */
-  z-index: auto !important; /* 确保层级正常 */
-  position: static !important; /* 确保不是绝对定位 */
+  opacity: 1 !important;
+  display: block !important;
+  visibility: visible !important;
+  height: auto !important;
+  overflow: visible !important;
+  z-index: auto !important;
+  position: static !important;
 }
 
 .result-url {
   font-size: 30rpx;
-  color: var(--copy-btn-hover-bg);
+  color: var(--copy-btn-hover-bg); /* 使用全局复制按钮Hover背景色变量 */
   word-break: break-all;
   line-height: 1.6;
   text-align: center;
@@ -216,12 +214,12 @@
   width: 100%;
 }
 .clickable-url:active {
-  background-color: var(--hover-bg-color);
+  background-color: var(--hover-bg-color); /* 使用全局Hover背景色变量 */
   border-radius: 8rpx;
 }
 .copy-hint-text {
   font-size: 26rpx;
-  color: var(--secondary-text-color);
+  color: var(--secondary-text-color); /* 使用全局辅助文本颜色变量 */
   margin-top: 10rpx;
   text-align: center;
   width: 100%;
@@ -236,7 +234,7 @@
   bottom: 0;
   left: 0;
   z-index: 100;
-  background: linear-gradient(to top, #f0f2f5 70%, rgba(240, 242, 245, 0));
+  background: linear-gradient(to top, var(--bg-color) 70%, rgba(240, 242, 245, 0)); /* 使用全局背景色变量 */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -246,14 +244,14 @@
 .action-button {
   width: 100%;
   height: 108rpx;
-  color: var(--btn-text-color);
+  color: var(--btn-text-color); /* 使用全局按钮文本颜色变量 */
   font-size: 36rpx;
   font-weight: 600;
   border-radius: 54rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8rpx 20rpx var(--shadow-color); /* 使用全局阴影变量 */
   transition: all 0.2s ease-in-out;
   letter-spacing: 1rpx;
   white-space: nowrap;
@@ -261,22 +259,22 @@
   text-overflow: ellipsis;
 }
 .action-button[disabled] {
-  background: linear-gradient(to right, #a5d6a7, #81c784) !important;
+  background: linear-gradient(to right, var(--btn-disabled-bg), var(--btn-disabled-bg)) !important; /* 使用全局禁用按钮颜色变量 */
   opacity: 0.8;
 }
 .extract-button {
-  background: linear-gradient(to right, var(--download-btn-bg), var(--download-btn-hover-bg));
+  background: linear-gradient(to right, var(--download-btn-bg), var(--download-btn-hover-bg)); /* 使用全局下载按钮颜色变量 */
 }
 .extract-button:active {
   transform: translateY(2rpx) scale(0.98);
-  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4rpx 10rpx var(--shadow-color); /* 使用全局阴影变量 */
 }
 .copy-button {
-  background: linear-gradient(to right, var(--copy-btn-bg), var(--copy-btn-hover-bg));
+  background: linear-gradient(to right, var(--copy-btn-bg), var(--copy-btn-hover-bg)); /* 使用全局复制按钮颜色变量 */
 }
 .copy-button:active {
   transform: translateY(2rpx) scale(0.98);
-  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4rpx 10rpx var(--shadow-color); /* 使用全局阴影变量 */
 }
 
 /* 次要按钮样式 */
@@ -287,11 +285,11 @@
 }
 .secondary-button {
   background-color: transparent;
-  color: var(--secondary-text-color);
+  color: var(--secondary-text-color); /* 使用全局辅助文本颜色变量 */
   font-size: 30rpx;
   font-weight: 500;
   padding: 10rpx 25rpx;
-  border: 1rpx solid #bdc3c7;
+  border: 1rpx solid var(--border-color); /* 使用全局边框颜色变量 */
   border-radius: 40rpx;
   line-height: 1;
   display: inline-flex;
@@ -303,7 +301,7 @@
   border: none;
 }
 .secondary-button:active {
-  background-color: rgba(127, 140, 141, 0.1);
+  background-color: var(--hover-bg-color); /* 使用全局Hover背景色变量 */
   transform: scale(0.98);
 }
 
@@ -311,8 +309,8 @@
 .status-message-box {
   margin-top: 40rpx;
   padding: 20rpx 30rpx;
-  background-color: #fcebeb; /* 浅红色背景 */
-  border: 1rpx solid #ea6a6a; /* 红色边框 */
+  background-color: var(--hover-bg-color); /* 错误盒子背景色，可以自定义为更警告的颜色 */
+  border: 1rpx solid var(--status-error-color); /* 红色边框 */
   border-radius: 16rpx;
   display: flex;
   flex-direction: column; /* 改为列布局，以便按钮垂直排列 */
@@ -359,25 +357,47 @@
 }
 
 .retry-button {
-    background-color: var(--copy-btn-bg);
-    color: var(--btn-text-color);
-    border-color: var(--copy-btn-bg);
+    background-color: var(--copy-btn-bg); /* 使用全局复制按钮背景色变量 */
+    color: var(--btn-text-color); /* 使用全局按钮文本颜色变量 */
+    border-color: var(--copy-btn-bg); /* 使用全局复制按钮背景色变量 */
 }
 .retry-button:active {
-    background-color: var(--copy-btn-hover-bg);
+    background-color: var(--copy-btn-hover-bg); /* 使用全局复制按钮Hover背景色变量 */
     transform: scale(0.98);
 }
 
 .feedback-button {
     background-color: transparent;
-    color: var(--secondary-text-color);
-    border-color: var(--secondary-text-color);
+    color: var(--secondary-text-color); /* 使用全局辅助文本颜色变量 */
+    border-color: var(--secondary-text-color); /* 使用全局辅助文本颜色变量 */
 }
 .feedback-button:active {
-    background-color: rgba(127, 140, 141, 0.1);
+    background-color: var(--hover-bg-color); /* 使用全局Hover背景色变量 */
     transform: scale(0.98);
 }
+/* pages/index/index.wxss (在合适的位置添加，例如在 .feedback-button 样式之后) */
 
+.reset-from-error-button {
+  width: 80%; /* 与其他错误操作按钮保持一致 */
+  height: 80rpx;
+  font-size: 30rpx;
+  font-weight: 500;
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+  margin-top: 15rpx; /* 与其他按钮保持间距 */
+  box-sizing: border-box;
+  border: 1rpx solid var(--secondary-text-color); /* 与辅助按钮颜色一致 */
+  background-color: transparent; /* 透明背景 */
+  color: var(--secondary-text-color); /* 文字颜色 */
+}
+
+.reset-from-error-button:active {
+  background-color: var(--hover-bg-color); /* 点击时效果 */
+  transform: scale(0.98);
+}
 /* 动画效果 */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(15rpx); }

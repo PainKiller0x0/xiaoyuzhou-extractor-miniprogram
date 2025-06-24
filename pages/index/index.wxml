@@ -1,4 +1,4 @@
-<view class="container">
+<view class="container" style="padding-bottom: {{containerPaddingBottom}}rpx;">
 
 <view class="header">
   <image class="logo" src="/images/logo.png" mode="aspectFit"></image>
@@ -23,7 +23,8 @@
         placeholder-class="input-placeholder"
       ></textarea>
       <button class="paste-link-button {{showPasteButton ? 'paste-link-button--visible' : 'paste-link-button--hidden'}}" 
-              bind:tap="onPasteLinkTap"></button>  </view>
+              bind:tap="onPasteLinkTap"></button>
+    </view>
     
     <view class="status-message-box" wx:if="{{statusMessage || errorType}}">
         <block wx:if="{{errorType}}">
@@ -35,6 +36,9 @@
             <button class="feedback-button"
                     wx:if="{{errorType === 'PARSE_FAILED' || errorType === 'NETWORK_ERROR'}}"
                     bind:tap="onFeedbackTap">反馈问题</button>
+            
+            <button class="reset-from-error-button" 
+                    bind:tap="onResetTap">重新开始</button>
         </block>
         <block wx:elif="{{statusMessage}}">
             <text class="status-message-icon">💡</text>
@@ -57,11 +61,13 @@
 </view>
 
 <view class="bottom-actions-fixed" style="padding-bottom: {{safeAreaBottom + 40}}rpx;"> 
-  <button class="action-button {{resultUrl ? 'copy-button' : 'extract-button'}}" bind:tap="{{resultUrl ? 'onCopyAndNavigateTap' : 'onExtractTap'}}" loading="{{isLoading}}" disabled="{{isLoading}}">
-    <text wx:if="{{isLoading}}">✨ 正在提取...</text>
-    <text wx:elif="{{resultUrl}}">📋 复制 • 转写</text>
-    <text wx:else>✨ 提取音频</text>
-  </button>
+  <block wx:if="{{!errorType}}">
+    <button class="action-button {{resultUrl ? 'copy-button' : 'extract-button'}}" bind:tap="{{resultUrl ? 'onCopyAndNavigateTap' : 'onExtractTap'}}" loading="{{isLoading}}" disabled="{{isLoading}}">
+      <text wx:if="{{isLoading}}">✨ 正在提取...</text>
+      <text wx:elif="{{resultUrl}}">📋 复制 • 转写</text>
+      <text wx:else>✨ 提取音频</text>
+    </button>
+  </block>
 
   <view class="secondary-action-area" wx:if="{{resultUrl}}">
     <button class="secondary-button" bind:tap="onResetTap">提取新链接</button>

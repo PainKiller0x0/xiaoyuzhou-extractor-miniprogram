@@ -17,17 +17,6 @@
       <text class="char-count">{{feedbackContent.length}}/500</text>
     </view>
 
-    <view class="input-group">
-      <text class="label">联系方式 (可选)</text>
-      <input
-        class="contact-input"
-        placeholder="例如：您的微信号或邮箱，方便我们与您沟通"
-        model:value="{{contactInfo}}"
-        bindinput="onContactInfoInput"
-        placeholder-class="input-placeholder"
-      />
-    </view>
-
     <button class="submit-button" bindtap="onSubmitFeedback" loading="{{isSubmitting}}" disabled="{{isSubmitting}}">
       {{isSubmitting ? '提交中...' : '提交反馈'}}
     </button>

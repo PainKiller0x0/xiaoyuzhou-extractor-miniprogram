@@ -1,4 +1,4 @@
-// pages/feedback/feedback.js
+// pages/feedback/feedback.js (移除联系方式相关逻辑)
 Page({
 
   /**
@@ -6,7 +6,7 @@ Page({
    */
   data: {
     feedbackContent: '',
-    contactInfo: '',
+    // contactInfo: '', // 移除此字段
     isSubmitting: false // 控制提交按钮的加载状态
   },
 
@@ -20,19 +20,19 @@ Page({
   },
 
   /**
-   * 监听联系方式输入
+   * 监听联系方式输入 (此方法可以移除，但为了安全保留，确保其不被调用)
    */
-  onContactInfoInput(e) {
-    this.setData({
-      contactInfo: e.detail.value
-    });
-  },
+  // onContactInfoInput(e) {
+  //   this.setData({
+  //     contactInfo: e.detail.value
+  //   });
+  // },
 
   /**
    * 提交反馈
    */
   async onSubmitFeedback() {
-    const { feedbackContent, contactInfo } = this.data;
+    const { feedbackContent } = this.data; // 移除 contactInfo
 
     if (feedbackContent.trim() === '') {
       wx.showToast({
@@ -52,7 +52,7 @@ Page({
         name: 'submitFeedback', // 调用我们刚刚创建的云函数
         data: {
           feedbackContent: feedbackContent.trim(),
-          contactInfo: contactInfo.trim()
+          // contactInfo: contactInfo.trim() // 移除此字段
         }
       });
 
@@ -67,7 +67,7 @@ Page({
         // 成功后清空表单并返回上一页
         this.setData({
           feedbackContent: '',
-          contactInfo: ''
+          // contactInfo: '' // 移除此字段
         });
         setTimeout(() => {
           wx.navigateBack(); // 返回上一页

@@ -1,4 +1,4 @@
-// cloudfunctions/submitFeedback/index.js
+// cloudfunctions/submitFeedback/index.js (移除联系方式字段)
 const cloud = require('wx-server-sdk');
 
 cloud.init({
@@ -8,7 +8,7 @@ cloud.init({
 const db = cloud.database(); // 初始化数据库
 
 exports.main = async (event, context) => {
-  const { feedbackContent, contactInfo } = event; // 从小程序端接收反馈内容和联系方式
+  const { feedbackContent } = event; // 移除 contactInfo
   const wxContext = cloud.getWXContext(); // 获取微信上下文信息，包含用户openid
 
   if (!feedbackContent || feedbackContent.trim() === '') {
@@ -23,7 +23,7 @@ exports.main = async (event, context) => {
       data: {
         _openid: wxContext.OPENID, // 记录用户openid，方便识别和联系
         feedbackContent: feedbackContent.trim(),
-        contactInfo: contactInfo ? contactInfo.trim() : '', // 可选的联系方式
+        // contactInfo: contactInfo ? contactInfo.trim() : '', // 移除此字段
         timestamp: db.serverDate(), // 记录反馈时间
         status: 'pending' // 初始状态，例如：'pending', 'reviewed', 'resolved'
       }

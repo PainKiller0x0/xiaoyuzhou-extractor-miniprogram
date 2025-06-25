@@ -1,4 +1,4 @@
-// pages/index/index.js (最终合并版 v0.3.0 升级完成，并修复了所有已知Bug)
+// pages/index/index.js (最终合并版 v0.4.0 - 新增分享功能)
 Page({
   /**
    * 页面的初始数据
@@ -69,27 +69,18 @@ Page({
         // 主按钮高度: 108rpx
         // secondary-action-area (提取新链接) 的 margin-top: 30rpx
         // secondary-button 的高度: 40rpx
-        // error-action-area (重试/反馈) 的 margin-top: 30rpx
-        // 重试/反馈按钮的高度: 80rpx (两个按钮，每个80rpx，间距15rpx)
 
-        // 我们需要计算底部操作区可能的最大高度。
-        // case 1: 只有主按钮 (提取音频)
-        // case 2: 有主按钮 (复制) + 次要按钮 (提取新链接)
-        // case 3: 处于错误状态 (主按钮变为重新开始) + 重试 + 反馈
+        // 在这个版本中，错误按钮区域(error-action-area)不在底部，而是包含在 status-message-box 里面，
+        // 不影响底部的总高度计算。
+        // 所以我们只考虑主按钮和次要按钮区域可能的最大高度。
         
-        // 计算各个组件的固定高度（不含内部margin/padding，那些已在wxss中考虑）
         const mainButtonHeight = 108; // 主按钮固定高度
         const secondaryAreaHeight = 30 + 40; // secondary-action-area 的 margin-top + secondary-button 高度
-        const errorActionAreaHeight = 30 + 80 + 15 + 80; // error-action-area 的 margin-top + retry-button + margin + feedback-button
         const bottomActionsFixedBasePadding = 20 + 40; // bottom-actions-fixed 的 padding-top + 内联 padding-bottom 的固定部分
 
-        // 取所有可能情况中的最大底部区域高度，再加上安全区和额外间距
-        let maxBottomAreaContentHeight = Math.max(
-          mainButtonHeight,                       // 只有主按钮
-          mainButtonHeight + secondaryAreaHeight, // 主按钮 + 提取新链接
-          mainButtonHeight + errorActionAreaHeight // 主按钮 (重新开始) + 重试 + 反馈
-        );
-
+        // 底部固定区域的最大内容高度（主按钮和次要按钮都显示时）
+        let maxBottomAreaContentHeight = mainButtonHeight + secondaryAreaHeight; 
+        
         // 最终容器底部填充 = 最大内容高度 + bottomActionsFixedBasePadding + safeAreaBottomRpx + 额外间距
         const extraBottomSpacing = 60; // 额外增加一些间距，防止刚好贴边
 
@@ -105,7 +96,7 @@ Page({
         // 失败时的默认值，一个较大的值确保内容不被遮挡
         this.setData({ 
           safeAreaBottom: 10, // 默认10rpx
-          containerPaddingBottom: 400 // 较大的默认值，确保安全
+          containerPaddingBottom: 350 // 较大的默认值
         });
       }
     });
@@ -270,5 +261,54 @@ Page({
       errorType: '', // 重置时清除错误类型
       showPasteButton: true, // 回到输入界面时，显示粘贴按钮
     });
-  }
+  },
+
+  /**
+   * 新增：用户点击右上角分享给好友/群 (转发)
+   * 或点击 <button open-type="share"> 时触发
+   * @param {Object} res 转发事件来源
+   */
+  onShareAppMessage(res) {
+    let shareTitle = '摘星译：轻松提取小宇宙播客音频，让知识随身听！';
+    let sharePath = '/pages/index/index'; // 默认分享到首页
+
+    // 如果当前有成功提取的链接和标题，则分享具体内容
+    if (this.data.resultUrl && this.data.podcastTitle) {
+      shareTitle = `【${this.data.podcastTitle}】音频直链已提取，快来听！ - 摘星译`;
+      // 这里可以根据需求是否带上结果参数，但通常分享出去让用户进入小程序再看结果，路径简单为好
+      // sharePath = `/pages/index/index?audioUrl=${encodeURIComponent(this.data.resultUrl)}&title=${encodeURIComponent(this.data.podcastTitle)}`;
+    }
+
+    console.log('[分享] onShareAppMessage 触发', shareTitle, sharePath);
+
+    return {
+      title: shareTitle,
+      path: sharePath,
+      // imageUrl: '/images/share_app_message_default.png' // 可选：自定义分享图片，推荐
+    };
+  },
+
+  /**
+   * 新增：用户点击右上角分享到朋友圈
+   * 基础库 2.7.3 及以上版本支持
+   */
+  onShareTimeline() {
+    let shareTitle = '摘星译：轻松提取小宇宙播客音频，让知识随身听！';
+    let query = ''; // 传递给朋友圈的查询参数
+
+    // 如果当前有成功提取的链接和标题，则分享具体内容
+    if (this.data.resultUrl && this.data.podcastTitle) {
+      shareTitle = `【${this.data.podcastTitle}】音频直链已提取，快来听！ - 摘星译`;
+      // query = `audioUrl=${encodeURIComponent(this.data.resultUrl)}&title=${encodeURIComponent(this.data.podcastTitle)}`;
+    }
+
+    console.log('[分享] onShareTimeline 触发', shareTitle, query);
+
+    return {
+      title: shareTitle,
+      query: query,
+      // imageUrl: '/images/share_timeline_default.png' // 可选：自定义朋友圈分享图片，推荐 800x640 比例
+    };
+  },
+
 });

@@ -1,4 +1,4 @@
-/* pages/index/index.wxss */
+/* pages/index/index.wxss (与上次提供的完整版一致，并添加了回退的样式) */
 @import "/app.wxss"; /* 确保导入全局样式变量 */
 
 /* 整体页面容器样式 */
@@ -277,7 +277,11 @@
   box-shadow: 0 4rpx 10rpx var(--shadow-color); /* 使用全局阴影变量 */
 }
 
-/* 次要按钮样式 */
+/* 移除之前为 .reset-button-in-error-state 定义的样式 */
+/* .reset-button-in-error-state { ... } 将其完全删除 */
+
+
+/* 次要按钮样式 (原本用于提取新链接) */
 .secondary-action-area {
   margin-top: 30rpx;
   width: 100%;
@@ -339,9 +343,10 @@
     font-weight: 500;
 }
 
-/* 新增：重试按钮和反馈按钮样式 */
+/* 重试按钮、反馈按钮、重新开始按钮的样式 (现在位于 status-message-box 内部) */
 .retry-button,
-.feedback-button {
+.feedback-button,
+.reset-from-error-button { /* 将 reset-from-error-button 添加进来 */
     width: 80%; /* 按钮宽度 */
     height: 80rpx;
     font-size: 30rpx;
@@ -366,38 +371,18 @@
     transform: scale(0.98);
 }
 
-.feedback-button {
+.feedback-button,
+.reset-from-error-button { /* 将 reset-from-error-button 与 feedback-button 样式一致 */
     background-color: transparent;
     color: var(--secondary-text-color); /* 使用全局辅助文本颜色变量 */
     border-color: var(--secondary-text-color); /* 使用全局辅助文本颜色变量 */
 }
-.feedback-button:active {
+.feedback-button:active,
+.reset-from-error-button:active {
     background-color: var(--hover-bg-color); /* 使用全局Hover背景色变量 */
     transform: scale(0.98);
 }
-/* pages/index/index.wxss (在合适的位置添加，例如在 .feedback-button 样式之后) */
 
-.reset-from-error-button {
-  width: 80%; /* 与其他错误操作按钮保持一致 */
-  height: 80rpx;
-  font-size: 30rpx;
-  font-weight: 500;
-  border-radius: 40rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease-in-out;
-  margin-top: 15rpx; /* 与其他按钮保持间距 */
-  box-sizing: border-box;
-  border: 1rpx solid var(--secondary-text-color); /* 与辅助按钮颜色一致 */
-  background-color: transparent; /* 透明背景 */
-  color: var(--secondary-text-color); /* 文字颜色 */
-}
-
-.reset-from-error-button:active {
-  background-color: var(--hover-bg-color); /* 点击时效果 */
-  transform: scale(0.98);
-}
 /* 动画效果 */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(15rpx); }

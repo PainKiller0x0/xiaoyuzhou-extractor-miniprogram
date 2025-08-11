@@ -1,4 +1,4 @@
-// pages/index/index.js (最终合并版 v0.4.0 - 新增分享功能)
+// pages/index/index.js (迁移至自有服务器版)
 Page({
   /**
    * 页面的初始数据
@@ -65,15 +65,6 @@ Page({
         const safeAreaBottomRpx = safeAreaBottomPx * (750 / screenWidth);
 
         // 计算底部固定区域的总高度 (单位rpx)
-        // bottom-actions-fixed 的 padding-top: 20rpx
-        // 主按钮高度: 108rpx
-        // secondary-action-area (提取新链接) 的 margin-top: 30rpx
-        // secondary-button 的高度: 40rpx
-
-        // 在这个版本中，错误按钮区域(error-action-area)不在底部，而是包含在 status-message-box 里面，
-        // 不影响底部的总高度计算。
-        // 所以我们只考虑主按钮和次要按钮区域可能的最大高度。
-        
         const mainButtonHeight = 108; // 主按钮固定高度
         const secondaryAreaHeight = 30 + 40; // secondary-action-area 的 margin-top + secondary-button 高度
         const bottomActionsFixedBasePadding = 20 + 40; // bottom-actions-fixed 的 padding-top + 内联 padding-bottom 的固定部分
@@ -137,7 +128,7 @@ Page({
     if (!urlToExtract) {
       this.setData({
         statusMessage: '请输入小宇宙播客单集链接',
-        errorType: 'INVALID_LINK' // 没有输入链接，也视为无效链接错误
+        errorType: 'INVALID_LINK'
       });
       return;
     }
@@ -146,52 +137,57 @@ Page({
       isLoading: true,
       resultUrl: '',
       podcastTitle: '',
-      statusMessage: '正在分析链接，请稍候...', // 提取开始时的提示信息
-      errorType: '',     // 开始提取时清除所有错误状态
-      showPasteButton: false, // 提取时隐藏粘贴按钮
-      lastInputValue: urlToExtract, // 记住本次提取的链接，以备重试
+      statusMessage: '正在分析链接，请稍候...',
+      errorType: '',
+      showPasteButton: false,
+      lastInputValue: urlToExtract,
     });
+    
+    // 自有服务器 API 地址
+    const serverApiUrl = 'https://zhaixingyi.painkiller.top/api/extractM4a';
 
-    wx.cloud.callFunction({
-      name: 'extractM4a',
-      data: { episodeUrl: urlToExtract }
-    }).then(res => {
-      console.log('云函数调用成功:', res);
-      // 云函数返回的数据在 res.result 中
-      const { success, m4aUrl, title, error, errorCode } = res.result;
+    // 使用 wx.request 调用你的自有服务器
+    wx.request({
+        url: serverApiUrl,
+        method: 'POST',
+        data: { episodeUrl: urlToExtract },
+        header: {
+            'content-type': 'application/json'
+        },
+        success: (res) => {
+            console.log('服务器请求成功:', res.data);
+            const { success, m4aUrl, title, error, errorCode } = res.data;
 
-      if (success) {
-        this.setData({
-          resultUrl: m4aUrl,
-          podcastTitle: title || '未知播客标题',
-          inputValue: '', // 成功后清空输入框
-          statusMessage: '链接提取成功！', // 成功提示
-          errorType: '', // 成功则清除错误类型
-        });
-        wx.showToast({ title: '提取成功', icon: 'success', duration: 1500 });
-      } else {
-        // 根据 errorCode 显示不同信息和按钮
-        console.error(`云函数返回错误: [${errorCode}] ${error}`);
-        this.setData({
-          statusMessage: error || '发生未知错误', // 显示云函数返回的错误信息
-          errorType: errorCode || 'UNKNOWN_ERROR', // 保存错误类型
-        });
-        wx.showToast({ title: '提取失败', icon: 'error', duration: 2000 });
-      }
-    }).catch(err => {
-      // 云函数调用本身失败，例如网络连接问题，或云函数部署问题
-      console.error('云函数调用失败:', err);
-      this.setData({
-        statusMessage: '服务连接失败，请检查网络或稍后再试。',
-        errorType: 'NETWORK_ERROR', // 客户端调用失败也视为网络错误
-      });
-      wx.showToast({ title: '请求失败', icon: 'error', duration: 2000 });
-    }).finally(() => {
-      this.setData({
-        isLoading: false
-      });
-      // 在处理完结果或错误后，重新评估粘贴按钮的显示
-      this.onShow(); 
+            if (success) {
+                this.setData({
+                    resultUrl: m4aUrl,
+                    podcastTitle: title || '未知播客标题',
+                    inputValue: '',
+                    statusMessage: '链接提取成功！',
+                    errorType: '',
+                });
+                wx.showToast({ title: '提取成功', icon: 'success', duration: 1500 });
+            } else {
+                console.error(`服务器返回错误: [${errorCode}] ${error}`);
+                this.setData({
+                    statusMessage: error || '发生未知错误',
+                    errorType: errorCode || 'UNKNOWN_ERROR',
+                });
+                wx.showToast({ title: '提取失败', icon: 'error', duration: 2000 });
+            }
+        },
+        fail: (err) => {
+            console.error('wx.request 请求失败:', err);
+            this.setData({
+                statusMessage: '服务连接失败，请检查网络或稍后再试。',
+                errorType: 'NETWORK_ERROR',
+            });
+            wx.showToast({ title: '请求失败', icon: 'error', duration: 2000 });
+        },
+        complete: () => {
+            this.setData({ isLoading: false });
+            this.onShow();
+        }
     });
   },
 
@@ -275,8 +271,6 @@ Page({
     // 如果当前有成功提取的链接和标题，则分享具体内容
     if (this.data.resultUrl && this.data.podcastTitle) {
       shareTitle = `【${this.data.podcastTitle}】音频直链已提取，快来听！ - 摘星译`;
-      // 这里可以根据需求是否带上结果参数，但通常分享出去让用户进入小程序再看结果，路径简单为好
-      // sharePath = `/pages/index/index?audioUrl=${encodeURIComponent(this.data.resultUrl)}&title=${encodeURIComponent(this.data.podcastTitle)}`;
     }
 
     console.log('[分享] onShareAppMessage 触发', shareTitle, sharePath);
@@ -284,7 +278,6 @@ Page({
     return {
       title: shareTitle,
       path: sharePath,
-      // imageUrl: '/images/share_app_message_default.png' // 可选：自定义分享图片，推荐
     };
   },
 
@@ -299,7 +292,6 @@ Page({
     // 如果当前有成功提取的链接和标题，则分享具体内容
     if (this.data.resultUrl && this.data.podcastTitle) {
       shareTitle = `【${this.data.podcastTitle}】音频直链已提取，快来听！ - 摘星译`;
-      // query = `audioUrl=${encodeURIComponent(this.data.resultUrl)}&title=${encodeURIComponent(this.data.podcastTitle)}`;
     }
 
     console.log('[分享] onShareTimeline 触发', shareTitle, query);
@@ -307,8 +299,6 @@ Page({
     return {
       title: shareTitle,
       query: query,
-      // imageUrl: '/images/share_timeline_default.png' // 可选：自定义朋友圈分享图片，推荐 800x640 比例
     };
   },
-
 });

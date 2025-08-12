@@ -1,4 +1,4 @@
-// pages/index/index.js (迁移至自有服务器版)
+// pages/index/index.js (最终版本 - 集成新后端功能)
 Page({
   /**
    * 页面的初始数据
@@ -15,6 +15,12 @@ Page({
     containerPaddingBottom: 0, // 动态计算页面的底部填充 (rpx单位)
     showPasteButton: true, // 控制粘贴按钮是否显示
     tongyiGongzhonghaoArticleUrl: 'https://mp.weixin.qq.com/s/w8O2PB-8hA5u27T7UuX7oQ',
+    // V0.5.0 新增：用于存储亮点卡片数据
+    highlightQuote: '',
+    highlightSummary: '',
+    highlightTags: [],
+    podcastCover: '',
+    podcastName: ''
   },
 
   /**
@@ -28,7 +34,6 @@ Page({
    * 页面显示/从后台回到前台时
    */
   onShow() {
-      // 只有在非加载、无结果、无输入内容且无错误时显示粘贴按钮
       const shouldBeVisible = !this.data.isLoading && !this.data.resultUrl && !this.data.inputValue.trim() && !this.data.errorType;
       this.setData({ showPasteButton: shouldBeVisible });
   },
@@ -41,8 +46,8 @@ Page({
     this.setData({
       inputValue: value,
       showPasteButton: !value.trim(),
-      statusMessage: '', // 输入时清除状态信息
-      errorType: '',     // 输入时清除错误类型
+      statusMessage: '',
+      errorType: '',
     });
   },
 
@@ -50,44 +55,34 @@ Page({
    * 获取底部安全区域信息，并计算页面的底部填充
    */
   getSafeAreaInfo() {
-    wx.getSystemInfo({ // 使用 getSystemInfo 更通用且包含 windowInfo
+    wx.getSystemInfo({
       success: (res) => {
         const screenWidth = res.screenWidth;
         let safeAreaBottomPx = 0;
-        // 如果 safeArea.bottom 小于 windowHeight，说明没有底部安全区或安全区很小
         if (res.safeArea && res.safeArea.bottom < res.windowHeight) {
-          safeAreaBottomPx = 0; // 此时安全区为0，或者已经包含在windowHeight内
+          safeAreaBottomPx = 0;
         } else if (res.safeArea && res.safeArea.bottom > res.windowHeight) {
           safeAreaBottomPx = res.safeArea.bottom - res.windowHeight;
         }
         
-        // 将px单位的安全区高度转换为rpx
         const safeAreaBottomRpx = safeAreaBottomPx * (750 / screenWidth);
-
-        // 计算底部固定区域的总高度 (单位rpx)
-        const mainButtonHeight = 108; // 主按钮固定高度
-        const secondaryAreaHeight = 30 + 40; // secondary-action-area 的 margin-top + secondary-button 高度
-        const bottomActionsFixedBasePadding = 20 + 40; // bottom-actions-fixed 的 padding-top + 内联 padding-bottom 的固定部分
-
-        // 底部固定区域的最大内容高度（主按钮和次要按钮都显示时）
+        const mainButtonHeight = 108;
+        const secondaryAreaHeight = 30 + 40;
+        const bottomActionsFixedBasePadding = 20 + 40;
         let maxBottomAreaContentHeight = mainButtonHeight + secondaryAreaHeight; 
-        
-        // 最终容器底部填充 = 最大内容高度 + bottomActionsFixedBasePadding + safeAreaBottomRpx + 额外间距
-        const extraBottomSpacing = 60; // 额外增加一些间距，防止刚好贴边
-
+        const extraBottomSpacing = 60;
         const calculatedContainerPaddingBottom = maxBottomAreaContentHeight + bottomActionsFixedBasePadding + safeAreaBottomRpx + extraBottomSpacing;
 
         this.setData({ 
-          safeAreaBottom: safeAreaBottomRpx, // 存储rpx单位的安全区高度
-          containerPaddingBottom: calculatedContainerPaddingBottom // 更新页面的底部填充
+          safeAreaBottom: safeAreaBottomRpx,
+          containerPaddingBottom: calculatedContainerPaddingBottom
         });
       },
       fail: (err) => {
         console.error('获取系统信息失败', err);
-        // 失败时的默认值，一个较大的值确保内容不被遮挡
         this.setData({ 
-          safeAreaBottom: 10, // 默认10rpx
-          containerPaddingBottom: 350 // 较大的默认值
+          safeAreaBottom: 10,
+          containerPaddingBottom: 350
         });
       }
     });
@@ -104,8 +99,8 @@ Page({
           this.setData({
             inputValue: clipboardData,
             showPasteButton: false,
-            statusMessage: '', // 粘贴时清除状态信息
-            errorType: '',     // 粘贴时清除错误类型
+            statusMessage: '',
+            errorType: '',
           }, () => {
             wx.showToast({ title: '已粘贴', icon: 'none', duration: 1000 });
           });
@@ -146,7 +141,6 @@ Page({
     // 自有服务器 API 地址
     const serverApiUrl = 'https://zhaixingyi.painkiller.top/api/extractM4a';
 
-    // 使用 wx.request 调用你的自有服务器
     wx.request({
         url: serverApiUrl,
         method: 'POST',
@@ -155,18 +149,32 @@ Page({
             'content-type': 'application/json'
         },
         success: (res) => {
-            console.log('服务器请求成功:', res.data);
-            const { success, m4aUrl, title, error, errorCode } = res.data;
+            const { success, m4aUrl, title, error, errorCode, cover, shownote, podcastName } = res.data;
 
             if (success) {
+                // 如果成功提取，则继续调用 getHighlights 接口
                 this.setData({
-                    resultUrl: m4aUrl,
-                    podcastTitle: title || '未知播客标题',
-                    inputValue: '',
-                    statusMessage: '链接提取成功！',
-                    errorType: '',
+                  podcastTitle: title || '未知播客标题',
+                  podcastCover: cover || '',
+                  podcastName: podcastName || '',
+                  // 清除旧的亮点数据
+                  highlightQuote: '',
+                  highlightSummary: '',
+                  highlightTags: []
                 });
-                wx.showToast({ title: '提取成功', icon: 'success', duration: 1500 });
+
+                if (shownote) {
+                    this.getHighlights(title, shownote);
+                } else {
+                    this.setData({
+                        resultUrl: m4aUrl,
+                        inputValue: '',
+                        statusMessage: '链接提取成功！但无法生成亮点卡片。',
+                        errorType: ''
+                    });
+                    wx.showToast({ title: '提取成功', icon: 'success', duration: 1500 });
+                }
+
             } else {
                 console.error(`服务器返回错误: [${errorCode}] ${error}`);
                 this.setData({
@@ -174,6 +182,7 @@ Page({
                     errorType: errorCode || 'UNKNOWN_ERROR',
                 });
                 wx.showToast({ title: '提取失败', icon: 'error', duration: 2000 });
+                this.setData({ isLoading: false }); // 失败时隐藏 loading
             }
         },
         fail: (err) => {
@@ -183,9 +192,59 @@ Page({
                 errorType: 'NETWORK_ERROR',
             });
             wx.showToast({ title: '请求失败', icon: 'error', duration: 2000 });
+            this.setData({ isLoading: false }); // 失败时隐藏 loading
         },
         complete: () => {
-            this.setData({ isLoading: false });
+            // 在这里不隐藏 loading，因为要等待 getHighlights 的结果
+        }
+    });
+  },
+
+  /**
+   * “获取亮点”的API调用
+   * @param {string} title 播客标题
+   * @param {string} shownote 播客简介
+   */
+  getHighlights(title, shownote) {
+    const serverApiUrl = 'https://zhaixingyi.painkiller.top/api/getHighlights';
+
+    this.setData({
+        statusMessage: '正在分析节目简介，生成亮点...',
+    });
+
+    wx.request({
+        url: serverApiUrl,
+        method: 'POST',
+        data: { title, shownote },
+        header: {
+            'content-type': 'application/json'
+        },
+        success: (res) => {
+            const { success, highlights } = res.data;
+            if (success && highlights) {
+                this.setData({
+                    highlightQuote: highlights.quote || '',
+                    highlightSummary: highlights.summary || '',
+                    highlightTags: highlights.tags || [],
+                    statusMessage: '亮点卡片生成成功！'
+                });
+            } else {
+                console.error('getHighlights 接口调用失败:', res.data.error);
+                this.setData({
+                    statusMessage: '亮点卡片生成失败，请重试或反馈问题。',
+                    errorType: 'GENERATE_FAILED' // 新增错误类型
+                });
+            }
+        },
+        fail: (err) => {
+            console.error('getHighlights API 请求失败:', err);
+            this.setData({
+                statusMessage: '亮点卡片 API 服务连接失败，请稍后重试。',
+                errorType: 'NETWORK_ERROR'
+            });
+        },
+        complete: () => {
+            this.setData({ isLoading: false }); // 所有请求完成后才隐藏 loading
             this.onShow();
         }
     });
@@ -196,11 +255,11 @@ Page({
    */
   onRetryTap() {
     this.setData({
-      inputValue: this.data.lastInputValue, // 将之前失败的链接填回输入框
-      statusMessage: '', // 清除之前的错误提示
-      errorType: '',     // 清除之前的错误类型
+      inputValue: this.data.lastInputValue,
+      statusMessage: '',
+      errorType: '',
     }, () => {
-      this.onExtractTap(); // 再次调用提取函数
+      this.onExtractTap();
     });
   },
   
@@ -209,7 +268,7 @@ Page({
    */
   onFeedbackTap() {
     wx.navigateTo({
-      url: '/pages/feedback/feedback' // 跳转到新的反馈页面
+      url: '/pages/feedback/feedback'
     });
   },
 
@@ -254,21 +313,23 @@ Page({
       podcastTitle: '',
       isLoading: false,
       statusMessage: '',
-      errorType: '', // 重置时清除错误类型
-      showPasteButton: true, // 回到输入界面时，显示粘贴按钮
+      errorType: '',
+      showPasteButton: true,
+      highlightQuote: '',
+      highlightSummary: '',
+      highlightTags: [],
+      podcastCover: '',
+      podcastName: ''
     });
   },
 
   /**
    * 新增：用户点击右上角分享给好友/群 (转发)
-   * 或点击 <button open-type="share"> 时触发
-   * @param {Object} res 转发事件来源
    */
   onShareAppMessage(res) {
     let shareTitle = '摘星译：轻松提取小宇宙播客音频，让知识随身听！';
-    let sharePath = '/pages/index/index'; // 默认分享到首页
+    let sharePath = '/pages/index/index';
 
-    // 如果当前有成功提取的链接和标题，则分享具体内容
     if (this.data.resultUrl && this.data.podcastTitle) {
       shareTitle = `【${this.data.podcastTitle}】音频直链已提取，快来听！ - 摘星译`;
     }
@@ -283,13 +344,11 @@ Page({
 
   /**
    * 新增：用户点击右上角分享到朋友圈
-   * 基础库 2.7.3 及以上版本支持
    */
   onShareTimeline() {
     let shareTitle = '摘星译：轻松提取小宇宙播客音频，让知识随身听！';
-    let query = ''; // 传递给朋友圈的查询参数
+    let query = '';
 
-    // 如果当前有成功提取的链接和标题，则分享具体内容
     if (this.data.resultUrl && this.data.podcastTitle) {
       shareTitle = `【${this.data.podcastTitle}】音频直链已提取，快来听！ - 摘星译`;
     }
@@ -301,4 +360,5 @@ Page({
       query: query,
     };
   },
+
 });

@@ -15,3 +15,7 @@ node_modules/
 
 # Git 自动化提交脚本
 commit_and_push.bat
+commit_and_push - 副本.bat
+
+# 忽略后端代码文件夹
+zhaixingyi-server/

@@ -49,13 +49,59 @@
 
   <block wx:else>
     <view class="result-section-card content-card-base">
-      <view class="result-header">
-        <text class="result-icon">🔗</text>
-        <text class="result-title">音频直链已生成</text>
+      <image class="podcast-cover" src="{{podcastCover}}" mode="aspectFill"></image>
+      <view class="podcast-info">
+        <text class="podcast-name">{{podcastName}}</text>
+        <text class="podcast-title">{{podcastTitle}}</text>
       </view>
-      <text class="podcast-title">{{podcastTitle}}</text> <text class="result-url clickable-url" user-select bind:tap="onCopyLinkOnly">{{resultUrl}}</text>
-      <text class="copy-hint-text">点击链接即可复制</text>
+      <view class="result-url-wrapper">
+        <text class="result-url clickable-url" user-select bind:tap="onCopyLinkOnly">{{resultUrl}}</text>
+        <text class="copy-hint-text">点击链接即可复制</text>
+      </view>
     </view>
+    
+    <view class="highlights-card content-card-base" wx:if="{{highlightQuote}}">
+      <view class="highlights-header">
+        <text class="highlights-icon">✨</text>
+        <text class="highlights-title">本期亮点速览</text>
+      </view>
+      <text class="highlight-quote">“{{highlightQuote}}”</text>
+      <view class="highlight-summary">
+        <text class="summary-label">精炼摘要：</text>
+        <text>{{highlightSummary}}</text>
+      </view>
+      <view class="tag-list" wx:if="{{highlightTags.length > 0}}">
+        <text class="tag" wx:for="{{highlightTags}}" wx:key="*this">{{item}}</text>
+      </view>
+    </view>
+    
+    <view class="shownote-card content-card-base" wx:if="{{shownote}}">
+      <view class="shownote-header">
+        <text class="shownote-icon">📜</text>
+        <text class="shownote-title">节目简介（Show notes）</text>
+      </view>
+      <text class="shownote-content">{{shownote}}</text>
+    </view>
+    
+    <view class="history-section" wx:if="{{historyList.length > 0}}">
+      <view class="history-header">
+        <text class="history-title">⏱ 最近提取</text>
+        <view class="clear-history" bindtap="onClearHistory">
+          <text>清空</text>
+        </view>
+      </view>
+      
+      <view class="history-list">
+        <view class="history-item" wx:for="{{historyList}}" wx:key="url" bindtap="onCopyHistoryItem" data-url="{{item.url}}">
+          <view class="history-item-content">
+            <text class="history-item-title">{{item.title}}</text>
+            <text class="history-item-time">{{item.time}}</text>
+          </view>
+          <text class="history-item-icon">📋</text>
+        </view>
+      </view>
+    </view>
+    
   </block>
   
 </view>

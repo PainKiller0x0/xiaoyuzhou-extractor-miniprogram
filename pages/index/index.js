@@ -20,7 +20,8 @@ Page({
     highlightSummary: '',
     highlightTags: [],
     podcastCover: '',
-    podcastName: ''
+    podcastName: '',
+    historyList: []// 👈 新增：用于存储本地历史记录
   },
 
   /**
@@ -36,6 +37,8 @@ Page({
   onShow() {
       const shouldBeVisible = !this.data.isLoading && !this.data.resultUrl && !this.data.inputValue.trim() && !this.data.errorType;
       this.setData({ showPasteButton: shouldBeVisible });
+      // 👈 新增：每次回到页面，读取本地历史记录
+      this.loadLocalHistory();
   },
 
   /**
@@ -149,6 +152,7 @@ Page({
             'content-type': 'application/json'
         },
         success: (res) => {
+            console.log('[小程序] extractM4a 服务器请求成功，返回数据:', res.data); // 添加日志
             const { success, m4aUrl, title, error, errorCode, cover, shownote, podcastName } = res.data;
 
             if (success) {
@@ -157,6 +161,7 @@ Page({
                   podcastTitle: title || '未知播客标题',
                   podcastCover: cover || '',
                   podcastName: podcastName || '',
+                  resultUrl: m4aUrl, // 在这里设置resultUrl以显示第一张卡片
                   // 清除旧的亮点数据
                   highlightQuote: '',
                   highlightSummary: '',
@@ -164,19 +169,22 @@ Page({
                 });
 
                 if (shownote) {
+                    console.log('[小程序] 成功获取shownote，正在调用 getHighlights...'); // 添加日志
                     this.getHighlights(title, shownote);
                 } else {
+                    console.warn('[小程序] 未能获取shownote，无法调用 getHighlights'); // 添加警告日志
                     this.setData({
-                        resultUrl: m4aUrl,
-                        inputValue: '',
                         statusMessage: '链接提取成功！但无法生成亮点卡片。',
                         errorType: ''
                     });
                     wx.showToast({ title: '提取成功', icon: 'success', duration: 1500 });
+                    // 👈 【关键！】在这里加上这一行，把结果存入历史
+                    this.saveToHistory(title, m4aUrl);
+                    this.setData({ isLoading: false }); // 如果没有shownote，提取流程到此结束
                 }
 
             } else {
-                console.error(`服务器返回错误: [${errorCode}] ${error}`);
+                console.error(`[小程序] extractM4a 服务器返回错误: [${errorCode}] ${error}`); // 添加日志
                 this.setData({
                     statusMessage: error || '发生未知错误',
                     errorType: errorCode || 'UNKNOWN_ERROR',
@@ -186,7 +194,7 @@ Page({
             }
         },
         fail: (err) => {
-            console.error('wx.request 请求失败:', err);
+            console.error('[小程序] wx.request 请求失败:', err); // 添加日志
             this.setData({
                 statusMessage: '服务连接失败，请检查网络或稍后再试。',
                 errorType: 'NETWORK_ERROR',
@@ -196,6 +204,7 @@ Page({
         },
         complete: () => {
             // 在这里不隐藏 loading，因为要等待 getHighlights 的结果
+            // this.setData({ isLoading: false }); 
         }
     });
   },
@@ -220,6 +229,7 @@ Page({
             'content-type': 'application/json'
         },
         success: (res) => {
+            console.log('[小程序] getHighlights API 调用成功，返回数据:', res.data); // 添加日志
             const { success, highlights } = res.data;
             if (success && highlights) {
                 this.setData({
@@ -229,7 +239,7 @@ Page({
                     statusMessage: '亮点卡片生成成功！'
                 });
             } else {
-                console.error('getHighlights 接口调用失败:', res.data.error);
+                console.error('[小程序] getHighlights 接口调用失败:', res.data.error); // 添加日志
                 this.setData({
                     statusMessage: '亮点卡片生成失败，请重试或反馈问题。',
                     errorType: 'GENERATE_FAILED' // 新增错误类型
@@ -237,7 +247,7 @@ Page({
             }
         },
         fail: (err) => {
-            console.error('getHighlights API 请求失败:', err);
+            console.error('[小程序] getHighlights API 请求失败:', err); // 添加日志
             this.setData({
                 statusMessage: '亮点卡片 API 服务连接失败，请稍后重试。',
                 errorType: 'NETWORK_ERROR'
@@ -360,5 +370,74 @@ Page({
       query: query,
     };
   },
+  /**
+   * 💡 新增：读取本地历史记录
+   */
+  loadLocalHistory() {
+    try {
+      const history = wx.getStorageSync('zxy_extract_history') || [];
+      this.setData({ historyList: history });
+    } catch (e) {
+      console.error('读取历史记录失败，但不影响主流程', e);
+    }
+  },
 
+  /**
+   * 💡 新增：保存到本地历史记录
+   */
+  saveToHistory(title, url) {
+    try {
+      let history = wx.getStorageSync('zxy_extract_history') || [];
+      // 去重：如果这个链接之前提取过，先把它从旧位置删掉，一会顶到最前面
+      history = history.filter(item => item.url !== url);
+      
+      // 插入到数组头部
+      history.unshift({
+        title: title || '未知播客标题',
+        url: url,
+        time: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString('zh-CN', { hour12: false }).slice(0, 5) // 格式化为：YYYY/MM/DD HH:mm
+      });
+
+      // 铁腕手段：只保留最近 10 条，避免本地缓存臃肿
+      if (history.length > 10) {
+        history = history.slice(0, 10);
+      }
+      
+      wx.setStorageSync('zxy_extract_history', history);
+      this.setData({ historyList: history });
+    } catch (e) {
+      console.error('保存历史记录失败', e);
+    }
+  },
+
+  /**
+   * 💡 新增：点击历史记录直接复制
+   */
+  onCopyHistoryItem(e) {
+    const url = e.currentTarget.dataset.url;
+    wx.setClipboardData({
+      data: url,
+      success: () => {
+        wx.showToast({ title: '历史链接已复制', icon: 'success' });
+      }
+    });
+  },
+
+  /**
+   * 💡 新增：清空历史记录
+   */
+  onClearHistory() {
+    wx.showModal({
+      title: '清空历史',
+      content: '确定要清空所有提取记录吗？',
+      confirmColor: '#e74c3c',
+      success: (res) => {
+        if (res.confirm) {
+          wx.removeStorageSync('zxy_extract_history');
+          this.setData({ historyList: [] });
+          wx.showToast({ title: '已清空', icon: 'none' });
+        }
+      }
+    });
+  },
 });

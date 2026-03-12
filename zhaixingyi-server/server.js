@@ -1,3 +1,4 @@
+// 这是正确的 server.js (只运行 HTTP，由 1Panel 代理)
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -7,7 +8,7 @@ const port = 3000;
 // 最终版本：从环境变量中安全地读取 Gemini API 密钥
 // =========================================================================
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
-const GEMINI_MODEL = 'gemini-pro';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 
 // 启动前检查，如果环境变量中没有密钥，直接报错并退出
 if (!GEMINI_API_KEY) {
@@ -18,8 +19,7 @@ if (!GEMINI_API_KEY) {
 app.use(express.json());
 
 // =========================================================================
-// extractM4a 接口（迁移自云函数）
-// 功能：抓取播客网页，提取直链、标题、封面和简介
+// 升级后的 extractM4a 接口
 // =========================================================================
 app.post('/api/extractM4a', async (req, res) => {
     const { episodeUrl } = req.body;
@@ -48,7 +48,7 @@ app.post('/api/extractM4a', async (req, res) => {
         const m4aMatch = htmlText.match(m4aRegex);
         const m4aUrl = m4aMatch ? m4aMatch[0] : null;
 
-        // 标题
+        // 提取标题
         let podcastTitle = '未知播客标题';
         const titleRegex = /<title>(.*?)<\/title>/;
         const titleMatch = htmlText.match(titleRegex);
@@ -56,7 +56,7 @@ app.post('/api/extractM4a', async (req, res) => {
             podcastTitle = titleMatch[1].replace(/\s*\|\s*小宇宙/, '').trim();
         }
 
-        // 封面
+        // 提取封面
         let cover = null;
         const coverRegex = /<meta\s+property="og:image"\s+content="([^"]+)"/;
         const coverMatch = htmlText.match(coverRegex);
@@ -64,15 +64,32 @@ app.post('/api/extractM4a', async (req, res) => {
             cover = coverMatch[1];
         }
 
-        // 简介 / shownote
-        let shownote = null;
-        const descRegex = /<meta\s+property="og:description"\s+content="([^"]+)"/;
-        const descMatch = htmlText.match(descRegex);
-        if (descMatch && descMatch[1]) {
-            shownote = descMatch[1];
+        // === 核心修改：增强 shownote 提取逻辑 ===
+        let shownote = '';
+        try {
+            // 策略1: 优先从结构化数据中提取 (最准确)
+            const jsonLdRegex = /<script name="schema:podcast-show" type="application\/ld\+json">(.*?)<\/script>/s;
+            const jsonLdMatch = htmlText.match(jsonLdRegex);
+            if (jsonLdMatch && jsonLdMatch[1]) {
+                const jsonLd = JSON.parse(jsonLdMatch[1]);
+                if (jsonLd.description) {
+                    shownote = jsonLd.description;
+                }
+            }
+
+            // 策略2: 如果策略1失败，尝试从 <meta> 标签中提取
+            if (!shownote) {
+                const metaRegex = /<meta\s+(?:property="og:description"\s+name="description"|name="description"\s+property="og:description")\s+content="([^"]+)"/;
+                const metaMatch = htmlText.match(metaRegex);
+                if (metaMatch && metaMatch[1]) {
+                    shownote = metaMatch[1];
+                }
+            }
+        } catch (e) {
+            console.error('[服务器] shownote 提取或解析失败:', e.message);
         }
 
-        // 播客名
+        // 提取播客名
         let podcastName = null;
         const siteNameRegex = /<meta\s+property="og:site_name"\s+content="([^"]+)"/;
         const siteNameMatch = htmlText.match(siteNameRegex);
@@ -114,7 +131,7 @@ app.post('/api/extractM4a', async (req, res) => {
 });
 
 // =========================================================================
-// 新增 getHighlights 接口（调用 Gemini Pro 摘要+金句+标签）
+// 新增 getHighlights 接口（调用 Gemini 摘要+金句+标签）
 // =========================================================================
 app.post('/api/getHighlights', async (req, res) => {
     const { title, shownote } = req.body;
@@ -142,11 +159,8 @@ app.post('/api/getHighlights', async (req, res) => {
 }
 `;
 
-    // !!! 核心修改 !!!
-    // 将 API 地址更换为可访问的代理服务地址
-    // 你需要将这个URL替换为你找到的实际代理服务地址
-    const proxyApiUrl = 'https://[你的代理服务地址]/v1beta/models/gemini-pro:generateContent';
-    const finalUrl = `${proxyApiUrl}?key=${GEMINI_API_KEY}`; // 密钥直接使用环境变量
+    const proxyApiUrl = `https://api-proxy.me/gemini/v1beta/models/${GEMINI_MODEL}:generateContent`;
+    const finalUrl = `${proxyApiUrl}?key=${GEMINI_API_KEY}`;
 
     try {
         const gRes = await axios.post(
@@ -164,7 +178,14 @@ app.post('/api/getHighlights', async (req, res) => {
         const textOutput = gRes.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
         let parsed;
         try {
-            parsed = JSON.parse(textOutput);
+            // 首先尝试从 Markdown 代码块中提取 JSON
+            const jsonMatch = textOutput.match(/```json\n(.*)\n```/s);
+            if (jsonMatch && jsonMatch[1]) {
+                parsed = JSON.parse(jsonMatch[1]);
+            } else {
+                // 如果不是 Markdown 格式，则直接尝试解析
+                parsed = JSON.parse(textOutput);
+            }
         } catch {
             parsed = { raw: textOutput };
         }
@@ -174,7 +195,18 @@ app.post('/api/getHighlights', async (req, res) => {
             highlights: parsed
         });
     } catch (err) {
-        console.error('[服务器] Gemini API 调用失败:', err.message);
+        console.error('[服务器] Gemini API 调用失败!');
+        if (err.response) {
+            console.error('[服务器] 状态码:', err.response.status);
+            console.error('[服务器] 响应数据:', err.response.data);
+            console.error('[服务器] 响应头:', err.response.headers);
+        } else if (err.request) {
+            console.error('[服务器] 请求已发出，但未收到响应。');
+            console.error('[服务器] 错误信息:', err.message);
+        } else {
+            console.error('[服务器] 其他错误:', err.message);
+        }
+
         return res.json({
             success: false,
             error: 'Gemini API 调用失败'
@@ -183,11 +215,17 @@ app.post('/api/getHighlights', async (req, res) => {
 });
 
 // =========================================================================
-// 原有的 submitFeedback（保留）
+// V0.5.0 升级：submitFeedback（B 方案）
 // =========================================================================
 app.post('/api/submitFeedback', async (req, res) => {
     const { feedbackContent } = req.body;
+
+    // 【待办】目前只是打印，下一步是写入数据库
     console.log('[服务器] 收到匿名反馈:', feedbackContent);
+
+    // 【重要】确保你的 1Panel / 数据库安全组允许 Node 服务器访问数据库
+    // 示例： try { ... await db.collection('feedback').insertOne(...) ... }
+
     return res.json({
         success: true,
         message: '反馈已提交，感谢您的支持！'

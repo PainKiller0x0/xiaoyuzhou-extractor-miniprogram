@@ -1,123 +1,133 @@
 <view class="container" style="padding-bottom: {{containerPaddingBottom}}rpx;">
 
-<view class="header">
-  <image class="logo" src="/images/logo.png" mode="aspectFit"></image>
-  <view class="title-wrapper">
-    <text class="main-title">收录宇宙絮语</text>
-    <text class="sub-title">点亮文字星河</text>
-    <text class="description-text">一键提取小宇宙播客音频，让知识随身听。</text>
+  <view class="header">
+    <image class="logo" src="/images/logo.png" mode="aspectFit"></image>
+    <view class="title-wrapper">
+      <text class="main-title">收录宇宙絮语</text>
+      <text class="sub-title">点亮文字星河</text>
+      <text class="description-text">一键提取小宇宙播客音频，让知识随身听。</text>
+    </view>
   </view>
-</view>
 
-<view class="content-area">
+  <view class="content-area">
 
-  <block wx:if="{{!resultUrl}}">
-    <view class="input-section-card content-card-base">
-      <textarea
-        class="url-input"
-        placeholder="请在此处粘贴小宇宙播客单集链接..."
-        model:value="{{inputValue}}"
-        bindinput="onInput"
-        auto-height
-        maxlength="-1"
-        placeholder-class="input-placeholder"
-      ></textarea>
-      <button class="paste-link-button {{showPasteButton ? 'paste-link-button--visible' : 'paste-link-button--hidden'}}" 
-              bind:tap="onPasteLinkTap"></button>
-    </view>
-    
-    <view class="status-message-box" wx:if="{{statusMessage || errorType}}">
-        <block wx:if="{{errorType}}">
-            <text class="status-message-icon">⚠️</text>
-            <text class="status-message-text status-error-text">{{statusMessage}}</text>
-            <button class="retry-button" 
-                    wx:if="{{errorType === 'PARSE_FAILED' || errorType === 'NETWORK_ERROR'}}" 
-                    bind:tap="onRetryTap">重试</button>
-            <button class="feedback-button"
-                    wx:if="{{errorType === 'PARSE_FAILED' || errorType === 'NETWORK_ERROR'}}"
-                    bind:tap="onFeedbackTap">反馈问题</button>
-            
-            <button class="reset-from-error-button" 
-                    bind:tap="onResetTap">重新开始</button>
-        </block>
-        <block wx:elif="{{statusMessage}}">
-            <text class="status-message-icon">💡</text>
-            <text class="status-message-text">{{statusMessage}}</text>
-        </block>
-    </view>
-  </block>
+    <block wx:if="{{!resultUrl}}">
+      <view class="input-section-card content-card-base">
+        <textarea
+          class="url-input"
+          placeholder="请在此处粘贴小宇宙播客单集链接..."
+          model:value="{{inputValue}}"
+          bindinput="onInput"
+          auto-height
+          maxlength="-1"
+          placeholder-class="input-placeholder"
+        ></textarea>
+        <button class="paste-link-button {{showPasteButton ? 'paste-link-button--visible' : 'paste-link-button--hidden'}}" 
+                bind:tap="onPasteLinkTap"></button>
+      </view>
+      
+      <view class="status-message-box" wx:if="{{statusMessage || errorType}}">
+          <block wx:if="{{errorType}}">
+              <text class="status-message-icon">⚠️</text>
+              <text class="status-message-text status-error-text">{{statusMessage}}</text>
+              <button class="retry-button" 
+                      wx:if="{{errorType === 'PARSE_FAILED' || errorType === 'NETWORK_ERROR'}}" 
+                      bind:tap="onRetryTap">重试</button>
+              <button class="feedback-button"
+                      wx:if="{{errorType === 'PARSE_FAILED' || errorType === 'NETWORK_ERROR'}}"
+                      bind:tap="onFeedbackTap">反馈问题</button>
+              <button class="reset-from-error-button" 
+                      bind:tap="onResetTap">重新开始</button>
+          </block>
+          <block wx:elif="{{statusMessage}}">
+              <text class="status-message-icon">💡</text>
+              <text class="status-message-text">{{statusMessage}}</text>
+          </block>
+      </view>
+    </block>
 
-  <block wx:else>
-    <view class="result-section-card content-card-base">
-      <image class="podcast-cover" src="{{podcastCover}}" mode="aspectFill"></image>
-      <view class="podcast-info">
-        <text class="podcast-name">{{podcastName}}</text>
-        <text class="podcast-title">{{podcastTitle}}</text>
-      </view>
-      <view class="result-url-wrapper">
-        <text class="result-url clickable-url" user-select bind:tap="onCopyLinkOnly">{{resultUrl}}</text>
-        <text class="copy-hint-text">点击链接即可复制</text>
-      </view>
-    </view>
-    
-    <view class="highlights-card content-card-base" wx:if="{{highlightQuote}}">
-      <view class="highlights-header">
-        <text class="highlights-icon">✨</text>
-        <text class="highlights-title">本期亮点速览</text>
-      </view>
-      <text class="highlight-quote">“{{highlightQuote}}”</text>
-      <view class="highlight-summary">
-        <text class="summary-label">精炼摘要：</text>
-        <text>{{highlightSummary}}</text>
-      </view>
-      <view class="tag-list" wx:if="{{highlightTags.length > 0}}">
-        <text class="tag" wx:for="{{highlightTags}}" wx:key="*this">{{item}}</text>
-      </view>
-    </view>
-    
-    <view class="shownote-card content-card-base" wx:if="{{shownote}}">
-      <view class="shownote-header">
-        <text class="shownote-icon">📜</text>
-        <text class="shownote-title">节目简介（Show notes）</text>
-      </view>
-      <text class="shownote-content">{{shownote}}</text>
-    </view>
-    
-    <view class="history-section" wx:if="{{historyList.length > 0}}">
-      <view class="history-header">
-        <text class="history-title">⏱ 最近提取</text>
-        <view class="clear-history" bindtap="onClearHistory">
-          <text>清空</text>
+    <block wx:else>
+      <view class="result-section-card content-card-base">
+        <image class="podcast-cover" src="{{podcastCover}}" mode="aspectFill"></image>
+        <view class="podcast-info">
+          <text class="podcast-name">{{podcastName}}</text>
+          <text class="podcast-title">{{podcastTitle}}</text>
+        </view>
+        <view class="result-url-wrapper">
+          <text class="result-url clickable-url" user-select bind:tap="onCopyLinkOnly">{{resultUrl}}</text>
+          <text class="copy-hint-text">点击链接即可复制</text>
         </view>
       </view>
       
-      <view class="history-list">
-        <view class="history-item" wx:for="{{historyList}}" wx:key="url" bindtap="onCopyHistoryItem" data-url="{{item.url}}">
-          <view class="history-item-content">
-            <text class="history-item-title">{{item.title}}</text>
-            <text class="history-item-time">{{item.time}}</text>
-          </view>
-          <text class="history-item-icon">📋</text>
+      <view class="highlights-card content-card-base" wx:if="{{highlightQuote}}">
+        <view class="highlights-header">
+          <text class="highlights-icon">✨</text>
+          <text class="highlights-title">本期亮点速览</text>
+        </view>
+        <text class="highlight-quote">“{{highlightQuote}}”</text>
+        <view class="highlight-summary">
+          <text class="summary-label">精炼摘要：</text>
+          <text>{{highlightSummary}}</text>
+        </view>
+        <view class="tag-list" wx:if="{{highlightTags.length > 0}}">
+          <text class="tag" wx:for="{{highlightTags}}" wx:key="*this">{{item}}</text>
         </view>
       </view>
-    </view>
+      
+      <view class="shownote-card content-card-base" wx:if="{{shownote}}">
+        <view class="shownote-header">
+          <text class="shownote-icon">📜</text>
+          <text class="shownote-title">节目简介（Show notes）</text>
+        </view>
+        <text class="shownote-content">{{shownote}}</text>
+      </view>
+    </block>
     
-  </block>
-  
-</view>
-
-<view class="bottom-actions-fixed" style="padding-bottom: {{safeAreaBottom + 40}}rpx;"> 
-  <block wx:if="{{!errorType}}">
-    <button class="action-button {{resultUrl ? 'copy-button' : 'extract-button'}}" bind:tap="{{resultUrl ? 'onCopyAndNavigateTap' : 'onExtractTap'}}" loading="{{isLoading}}" disabled="{{isLoading}}">
-      <text wx:if="{{isLoading}}">✨ 正在提取...</text>
-      <text wx:elif="{{resultUrl}}">📋 复制 • 转写</text>
-      <text wx:else>✨ 提取音频</text>
-    </button>
-  </block>
-
-  <view class="secondary-action-area" wx:if="{{resultUrl}}">
-    <button class="secondary-button" bind:tap="onResetTap">提取新链接</button>
   </view>
-</view>
+
+  <view class="bottom-actions-fixed" style="padding-bottom: {{safeAreaBottom + 40}}rpx;"> 
+    <block wx:if="{{!errorType}}">
+      
+      <view class="primary-actions-row">
+        <button class="history-icon-button" wx:if="{{!resultUrl && historyList.length > 0}}" bindtap="onShowHistory">
+          🕒 历史
+        </button>
+        
+        <button class="action-button {{resultUrl ? 'copy-button' : 'extract-button'}}" bind:tap="{{resultUrl ? 'onCopyAndNavigateTap' : 'onExtractTap'}}" loading="{{isLoading}}" disabled="{{isLoading}}">
+          <text wx:if="{{isLoading}}">✨ 正在提取...</text>
+          <text wx:elif="{{resultUrl}}">📋 复制 • 转写</text>
+          <text wx:else>✨ 提取音频</text>
+        </button>
+      </view>
+
+    </block>
+    <view class="secondary-action-area" wx:if="{{resultUrl}}">
+      <button class="secondary-button" bind:tap="onResetTap">提取新链接</button>
+    </view>
+  </view>
+
+  <view class="history-popup-overlay" wx:if="{{showHistoryPopup}}" bindtap="onCloseHistory">
+    <view class="history-popup-content" catchtap="preventClose">
+      <view class="history-popup-header">
+        <text class="history-title">⏱ 最近提取记录</text>
+        <view class="history-header-actions">
+          <view class="clear-history" bindtap="onClearHistory"><text>清空</text></view>
+          <view class="close-history" bindtap="onCloseHistory"><text>✖</text></view>
+        </view>
+      </view>
+      
+      <scroll-view class="history-list-scroll" scroll-y>
+        <view class="history-list">
+          <view class="history-item" wx:for="{{historyList}}" wx:key="url" bindtap="onCopyHistoryItem" data-url="{{item.url}}">
+            <view class="history-item-content">
+              <text class="history-item-title">{{item.title}}</text>
+              <text class="history-item-time">{{item.time}}</text>
+            </view>
+            <text class="history-item-icon">📋</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
 
 </view>

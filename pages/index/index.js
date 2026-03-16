@@ -19,7 +19,7 @@ Page({
     podcastName: '',
     historyList: [], 
     showHistoryPopup: false,
-    isGeneratingPoster: false // 💡 新增：用于防抖和按钮 Loading 状态
+    isGeneratingPoster: false 
   },
 
   onLoad() {
@@ -181,7 +181,11 @@ Page({
     wx.request({
         url: serverApiUrl,
         method: 'POST',
-        data: { title, shownote },
+        data: { 
+            title, 
+            shownote,
+            version: '0.6.0' // 💡 核心改动：告诉服务器我是新版，给我完整数据！
+        },
         header: { 'content-type': 'application/json' },
         success: (res) => {
             const { success, highlights } = res.data;
@@ -284,9 +288,6 @@ Page({
     return { title: shareTitle, query: '' };
   },
 
-  // ==========================================
-  // 底部弹窗 & 历史记录机制
-  // ==========================================
   onShowHistory() {
     this.setData({ showHistoryPopup: true });
   },
@@ -349,9 +350,6 @@ Page({
     });
   },
 
-  // ==========================================
-  // 💡 核心新增：生成并绘制 Canvas 金句海报
-  // ==========================================
   async onGeneratePoster() {
     this.setData({ isGeneratingPoster: true });
     wx.showLoading({ title: '正在生成海报...' });
@@ -378,31 +376,27 @@ Page({
           const canvas = res[0].node;
           const ctx = canvas.getContext('2d');
           
-          // 设定高清画布尺寸
           const width = 750;
           const height = 1334;
           canvas.width = width;
           canvas.height = height;
 
-          // 1. 绘制纯白背景底色
           ctx.fillStyle = '#ffffff';
           ctx.fillRect(0, 0, width, height);
 
-          // 图像加载辅助函数
           const loadImage = (src) => {
             return new Promise((imgResolve, imgReject) => {
               const img = canvas.createImage();
               img.onload = () => imgResolve(img);
               img.onerror = (e) => {
                 console.warn('图片加载失败:', src, e);
-                imgResolve(null); // 图片加载失败也不阻断主流程，直接返回 null
+                imgResolve(null); 
               };
               img.src = src;
             });
           };
 
           try {
-            // 2. 绘制播客封面图
             if (this.data.podcastCover) {
               const coverImg = await loadImage(this.data.podcastCover);
               if (coverImg) {
@@ -410,7 +404,6 @@ Page({
               }
             }
 
-            // 3. 绘制播客标题
             ctx.fillStyle = '#2c3e50';
             ctx.font = 'bold 36px sans-serif';
             ctx.textAlign = 'center';
@@ -418,20 +411,17 @@ Page({
             const shortTitle = title.length > 20 ? title.substring(0, 19) + '...' : title;
             ctx.fillText(shortTitle, width / 2, 520);
 
-            // 4. 绘制醒目双引号装饰
             ctx.fillStyle = '#e0e6e8';
             ctx.font = 'bold 120px sans-serif';
             ctx.textAlign = 'left';
             ctx.fillText('“', 60, 660);
 
-            // 5. 绘制核心金句文案 (支持自动换行)
             ctx.fillStyle = '#333333';
             ctx.font = 'bold 44px sans-serif';
             ctx.textAlign = 'left';
             const quoteText = this.data.highlightQuote || '这是一期直击灵魂的播客，等待你的倾听。';
             this.drawText(ctx, quoteText, 100, 720, 550, 68);
 
-            // 6. 绘制底部分割线
             ctx.beginPath();
             ctx.moveTo(60, 1100);
             ctx.lineTo(690, 1100);
@@ -439,7 +429,6 @@ Page({
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // 7. 绘制底部导流引导文案
             ctx.fillStyle = '#7f8c8d';
             ctx.font = '28px sans-serif';
             ctx.textAlign = 'left';
@@ -448,13 +437,11 @@ Page({
             ctx.fillStyle = '#bdc3c7';
             ctx.fillText('长按扫码，一键提取音频与文稿', 60, 1230);
 
-            // 8. 绘制你自己的小程序二维码
             const qrCodeImg = await loadImage('/images/qrcode.png');
             if (qrCodeImg) {
               ctx.drawImage(qrCodeImg, 550, 1135, 140, 140);
             }
 
-            // 9. 导出生成图片，并打开全屏预览
             wx.canvasToTempFilePath({
               canvas: canvas,
               success: (res) => {
@@ -474,7 +461,6 @@ Page({
     });
   },
 
-  // Canvas 文本换行计算辅助函数
   drawText(ctx, text, x, y, maxWidth, lineHeight) {
     let line = '';
     let currentY = y;

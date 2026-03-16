@@ -1,4 +1,4 @@
-// pages/index/index.js (终极版 - 包含底部弹窗历史记录及直达跳转)
+// pages/index/index.js
 Page({
   data: {
     inputValue: '', 
@@ -17,8 +17,9 @@ Page({
     highlightTags: [],
     podcastCover: '',
     podcastName: '',
-    historyList: [], // 本地历史记录数据
-    showHistoryPopup: false // 控制历史记录弹窗显示
+    historyList: [], 
+    showHistoryPopup: false,
+    isGeneratingPoster: false // 💡 新增：用于防抖和按钮 Loading 状态
   },
 
   onLoad() {
@@ -123,9 +124,7 @@ Page({
         url: serverApiUrl,
         method: 'POST',
         data: { episodeUrl: urlToExtract },
-        header: {
-            'content-type': 'application/json'
-        },
+        header: { 'content-type': 'application/json' },
         success: (res) => {
             const { success, m4aUrl, title, error, errorCode, cover, shownote, podcastName } = res.data;
 
@@ -140,7 +139,6 @@ Page({
                   highlightTags: []
                 });
 
-                // 【核心修复】无论有没有简介，必须先存历史记录！
                 this.saveToHistory(title, m4aUrl);
 
                 if (shownote) {
@@ -153,7 +151,6 @@ Page({
                     wx.showToast({ title: '提取成功', icon: 'success', duration: 1500 });
                     this.setData({ isLoading: false }); 
                 }
-
             } else {
                 this.setData({
                     statusMessage: error || '发生未知错误',
@@ -293,15 +290,10 @@ Page({
   onShowHistory() {
     this.setData({ showHistoryPopup: true });
   },
-
   onCloseHistory() {
     this.setData({ showHistoryPopup: false });
   },
-
-  preventClose() {
-    // 阻止冒泡，防止点击弹窗内容时关闭弹窗
-  },
-  
+  preventClose() {},
   loadLocalHistory() {
     try {
       const history = wx.getStorageSync('zxy_extract_history') || [];
@@ -310,45 +302,38 @@ Page({
       console.error('读取历史记录失败', e);
     }
   },
-
   saveToHistory(title, url) {
     try {
       let history = wx.getStorageSync('zxy_extract_history') || [];
       history = history.filter(item => item.url !== url);
-      
       history.unshift({
         title: title || '未知播客标题',
         url: url,
         time: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString('zh-CN', { hour12: false }).slice(0, 5) 
       });
-
       if (history.length > 10) history = history.slice(0, 10);
-      
       wx.setStorageSync('zxy_extract_history', history);
       this.setData({ historyList: history });
     } catch (e) {
       console.error('保存历史记录失败', e);
     }
   },
-
   onCopyHistoryItem(e) {
     const url = e.currentTarget.dataset.url;
     wx.setClipboardData({
       data: url,
       success: () => {
-        // 【核心交互升级】关闭弹窗 -> 提示复制成功 -> 直接跳转通义听悟
         this.setData({ showHistoryPopup: false });
         wx.showToast({ title: '已复制，即将跳转', icon: 'success', duration: 1500 });
         setTimeout(() => {
           wx.navigateTo({
             url: `/pages/go-to-tongyi/go-to-tongyi?url=${encodeURIComponent(this.data.tongyiGongzhonghaoArticleUrl)}`
           });
-        }, 500); // 稍微延迟，让Toast能看清
+        }, 500); 
       },
       fail: () => { wx.showToast({ title: '复制失败', icon: 'none' }); }
     });
   },
-
   onClearHistory() {
     wx.showModal({
       title: '清空历史',
@@ -362,5 +347,149 @@ Page({
         }
       }
     });
+  },
+
+  // ==========================================
+  // 💡 核心新增：生成并绘制 Canvas 金句海报
+  // ==========================================
+  async onGeneratePoster() {
+    this.setData({ isGeneratingPoster: true });
+    wx.showLoading({ title: '正在生成海报...' });
+
+    try {
+      await this.drawPoster();
+    } catch (error) {
+      console.error('海报生成失败', error);
+      wx.showToast({ title: '海报生成失败，请重试', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+      this.setData({ isGeneratingPoster: false });
+    }
+  },
+
+  drawPoster() {
+    return new Promise((resolve, reject) => {
+      const query = wx.createSelectorQuery();
+      query.select('#posterCanvas')
+        .fields({ node: true, size: true })
+        .exec(async (res) => {
+          if (!res[0] || !res[0].node) return reject(new Error('未找到 Canvas 节点'));
+          
+          const canvas = res[0].node;
+          const ctx = canvas.getContext('2d');
+          
+          // 设定高清画布尺寸
+          const width = 750;
+          const height = 1334;
+          canvas.width = width;
+          canvas.height = height;
+
+          // 1. 绘制纯白背景底色
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, width, height);
+
+          // 图像加载辅助函数
+          const loadImage = (src) => {
+            return new Promise((imgResolve, imgReject) => {
+              const img = canvas.createImage();
+              img.onload = () => imgResolve(img);
+              img.onerror = (e) => {
+                console.warn('图片加载失败:', src, e);
+                imgResolve(null); // 图片加载失败也不阻断主流程，直接返回 null
+              };
+              img.src = src;
+            });
+          };
+
+          try {
+            // 2. 绘制播客封面图
+            if (this.data.podcastCover) {
+              const coverImg = await loadImage(this.data.podcastCover);
+              if (coverImg) {
+                ctx.drawImage(coverImg, (width - 320) / 2, 120, 320, 320);
+              }
+            }
+
+            // 3. 绘制播客标题
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = 'bold 36px sans-serif';
+            ctx.textAlign = 'center';
+            const title = this.data.podcastTitle || '小宇宙播客推荐';
+            const shortTitle = title.length > 20 ? title.substring(0, 19) + '...' : title;
+            ctx.fillText(shortTitle, width / 2, 520);
+
+            // 4. 绘制醒目双引号装饰
+            ctx.fillStyle = '#e0e6e8';
+            ctx.font = 'bold 120px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('“', 60, 660);
+
+            // 5. 绘制核心金句文案 (支持自动换行)
+            ctx.fillStyle = '#333333';
+            ctx.font = 'bold 44px sans-serif';
+            ctx.textAlign = 'left';
+            const quoteText = this.data.highlightQuote || '这是一期直击灵魂的播客，等待你的倾听。';
+            this.drawText(ctx, quoteText, 100, 720, 550, 68);
+
+            // 6. 绘制底部分割线
+            ctx.beginPath();
+            ctx.moveTo(60, 1100);
+            ctx.lineTo(690, 1100);
+            ctx.strokeStyle = '#eeeeee';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 7. 绘制底部导流引导文案
+            ctx.fillStyle = '#7f8c8d';
+            ctx.font = '28px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('摘星译 · 收录宇宙絮语', 60, 1180);
+            ctx.font = '24px sans-serif';
+            ctx.fillStyle = '#bdc3c7';
+            ctx.fillText('长按扫码，一键提取音频与文稿', 60, 1230);
+
+            // 8. 绘制你自己的小程序二维码
+            const qrCodeImg = await loadImage('/images/qrcode.png');
+            if (qrCodeImg) {
+              ctx.drawImage(qrCodeImg, 550, 1135, 140, 140);
+            }
+
+            // 9. 导出生成图片，并打开全屏预览
+            wx.canvasToTempFilePath({
+              canvas: canvas,
+              success: (res) => {
+                wx.previewImage({
+                  urls: [res.tempFilePath],
+                  current: res.tempFilePath
+                });
+                resolve();
+              },
+              fail: reject
+            });
+
+          } catch (e) {
+            reject(e);
+          }
+        });
+    });
+  },
+
+  // Canvas 文本换行计算辅助函数
+  drawText(ctx, text, x, y, maxWidth, lineHeight) {
+    let line = '';
+    let currentY = y;
+    for (let i = 0; i < text.length; i++) {
+      let testLine = line + text[i];
+      let metrics = ctx.measureText(testLine);
+      let testWidth = metrics.width;
+      if (testWidth > maxWidth && i > 0) {
+        ctx.fillText(line, x, currentY);
+        line = text[i];
+        currentY += lineHeight;
+      } else {
+        line = testLine;
+      }
+    }
+    ctx.fillText(line, x, currentY);
   }
 });

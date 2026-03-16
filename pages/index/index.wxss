@@ -1,4 +1,4 @@
-/* pages/index/index.wxss (最终精调版) */
+/* pages/index/index.wxss */
 @import "/app.wxss"; 
 
 .container {
@@ -304,21 +304,18 @@
   align-items: center;
 }
 
-/* --- 💡 核心新增：横向排列容器 --- */
 .primary-actions-row {
   width: 100%;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  gap: 24rpx; /* 主按钮和历史按钮之间的间距 */
+  gap: 24rpx; 
 }
-
-/* 历史记录小圆角按钮 */
 .history-icon-button {
-  flex: 0 0 180rpx; /* 固定宽度，不拉伸也不压缩 */
+  flex: 0 0 180rpx; 
   height: 108rpx;
-  border-radius: 54rpx; /* 药丸形状 */
+  border-radius: 54rpx; 
   background-color: var(--url-bg-color);
   border: 2rpx solid var(--border-color);
   display: flex;
@@ -338,7 +335,7 @@
 }
 
 .action-button {
-  flex: 1; /* 💡 改为撑满剩余空间，替代之前的 width: 100% */
+  flex: 1; 
   height: 108rpx;
   color: var(--btn-text-color); 
   font-size: 36rpx;
@@ -465,9 +462,6 @@
   transform: scale(0.98);
 }
 
-/* ====================
-   历史记录弹窗统一样式 (Bottom Sheet)
-   ==================== */
 .history-popup-overlay {
   position: fixed;
   top: 0;
@@ -481,7 +475,6 @@
   justify-content: flex-end; 
   animation: fadeInOverlay 0.2s ease-out forwards;
 }
-
 .history-popup-content {
   background-color: var(--bg-color);
   border-top-left-radius: 40rpx;
@@ -493,7 +486,6 @@
   animation: slideUpPopup 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   box-shadow: 0 -10rpx 40rpx rgba(0, 0, 0, 0.08);
 }
-
 .history-popup-header {
   display: flex;
   justify-content: space-between;
@@ -502,19 +494,16 @@
   padding-bottom: 20rpx;
   border-bottom: 1rpx solid var(--border-color);
 }
-
 .history-title {
   font-size: 34rpx;
   font-weight: 600;
   color: var(--title-color);
 }
-
 .history-header-actions {
   display: flex;
   align-items: center;
   gap: 30rpx;
 }
-
 .clear-history {
   font-size: 26rpx;
   color: var(--status-error-color);
@@ -527,7 +516,6 @@
   transform: scale(0.95);
   background-color: rgba(231, 76, 60, 0.15);
 }
-
 .close-history {
   font-size: 40rpx;
   line-height: 1;
@@ -537,17 +525,14 @@
 .close-history:active {
   opacity: 0.6;
 }
-
 .history-list-scroll {
   max-height: 55vh; 
 }
-
 .history-list {
   display: flex;
   flex-direction: column;
   gap: 20rpx; 
 }
-
 .history-item {
   display: flex;
   justify-content: space-between;
@@ -562,7 +547,6 @@
   transform: scale(0.98);
   background-color: var(--hover-bg-color);
 }
-
 .history-item-content {
   display: flex;
   flex-direction: column;
@@ -570,7 +554,6 @@
   overflow: hidden;
   margin-right: 20rpx;
 }
-
 .history-item-title {
   font-size: 28rpx;
   color: var(--text-color);
@@ -580,29 +563,46 @@
   text-overflow: ellipsis; 
   margin-bottom: 10rpx;
 }
-
 .history-item-time {
   font-size: 22rpx;
   color: var(--secondary-text-color);
 }
-
 .history-item-icon {
   font-size: 36rpx;
   opacity: 0.8;
 }
 
-/* 动画效果 */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(15rpx); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes fadeInOverlay {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-
 @keyframes slideUpPopup {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
+}
+
+/* 💡 独立出来的生成海报按钮样式 */
+.generate-poster-btn {
+  margin-bottom: 30rpx; /* 与下方的卡片保持间距 */
+  width: 100%;
+  height: 90rpx;
+  background-color: var(--title-color); 
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 500;
+  border-radius: 45rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx var(--shadow-color);
+  transition: all 0.2s;
+}
+.generate-poster-btn:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+  background-color: #1a252f;
 }

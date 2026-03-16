@@ -58,6 +58,10 @@
           <text class="copy-hint-text">点击链接即可复制</text>
         </view>
       </view>
+
+      <button class="generate-poster-btn" bindtap="onGeneratePoster" loading="{{isGeneratingPoster}}" disabled="{{isGeneratingPoster}}">
+         生成金句海报分享
+      </button>
       
       <view class="highlights-card content-card-base" wx:if="{{highlightQuote}}">
         <view class="highlights-header">
@@ -87,19 +91,16 @@
 
   <view class="bottom-actions-fixed" style="padding-bottom: {{safeAreaBottom + 40}}rpx;"> 
     <block wx:if="{{!errorType}}">
-      
       <view class="primary-actions-row">
         <button class="history-icon-button" wx:if="{{!resultUrl && historyList.length > 0}}" bindtap="onShowHistory">
           🕒 历史
         </button>
-        
         <button class="action-button {{resultUrl ? 'copy-button' : 'extract-button'}}" bind:tap="{{resultUrl ? 'onCopyAndNavigateTap' : 'onExtractTap'}}" loading="{{isLoading}}" disabled="{{isLoading}}">
           <text wx:if="{{isLoading}}">✨ 正在提取...</text>
           <text wx:elif="{{resultUrl}}">📋 复制 • 转写</text>
           <text wx:else>✨ 提取音频</text>
         </button>
       </view>
-
     </block>
     <view class="secondary-action-area" wx:if="{{resultUrl}}">
       <button class="secondary-button" bind:tap="onResetTap">提取新链接</button>
@@ -115,7 +116,6 @@
           <view class="close-history" bindtap="onCloseHistory"><text>✖</text></view>
         </view>
       </view>
-      
       <scroll-view class="history-list-scroll" scroll-y>
         <view class="history-list">
           <view class="history-item" wx:for="{{historyList}}" wx:key="url" bindtap="onCopyHistoryItem" data-url="{{item.url}}">
@@ -129,5 +129,7 @@
       </scroll-view>
     </view>
   </view>
+
+  <canvas type="2d" id="posterCanvas" style="width: 750px; height: 1334px; position: fixed; left: -9999px;"></canvas>
 
 </view>

@@ -41,7 +41,7 @@
 .sub-title {
   font-size: 30rpx;
   font-weight: 500;
-  color: #666666;
+  color: #7f8c8d;
   margin-bottom: 16rpx;
 }
 .description-text {
@@ -100,7 +100,7 @@
   right: 30rpx;
   bottom: 30rpx;
   background-color: #f2f4f6;
-  color: #666666; 
+  color: #7f8c8d; 
   font-size: 26rpx;
   padding: 14rpx 36rpx;
   border-radius: 40rpx;
@@ -211,7 +211,7 @@
 }
 .tag {
   background-color: #f2f4f6;
-  color: #666666;
+  color: #7f8c8d;
   font-size: 24rpx;
   padding: 8rpx 24rpx;
   border-radius: 30rpx;
@@ -355,7 +355,7 @@
 }
 .secondary-button {
   background-color: transparent;
-  color: #666666; 
+  color: #7f8c8d; 
   font-size: 28rpx;
   font-weight: 500;
   padding: 10rpx 30rpx;
@@ -428,7 +428,7 @@
 .feedback-button,
 .reset-from-error-button { 
   background-color: transparent;
-  color: #666666; 
+  color: #7f8c8d; 
   border-color: #bdc3c7; 
 }
 .feedback-button:active,
